@@ -4,9 +4,28 @@
   "description": "MCP server for passwd.team password manager",
   "type": "module",
   "main": "dist/index.js",
+  "bin": {
+    "passwd-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "passwd",
+    "password-manager",
+    "claude",
+    "model-context-protocol"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nicokant/passwd-mcp.git"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",

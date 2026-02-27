@@ -2,9 +2,39 @@
 
 MCP (Model Context Protocol) server for the [passwd.team](https://passwd.team) password manager. Enables Claude and other MCP clients to manage password records, generate TOTP codes, and handle sharing.
 
-## Setup
+## Installation
+
+### Quick install (Claude Code)
 
 ```bash
+claude mcp add passwd-mcp -e PASSWD_ORIGIN=https://your-company.passwd.team -- npx passwd-mcp
+```
+
+That's it — restart Claude Code and verify with `/mcp`.
+
+### Quick install (other MCP clients)
+
+Add to your MCP client config:
+
+```json
+{
+  "mcpServers": {
+    "passwd-mcp": {
+      "command": "npx",
+      "args": ["passwd-mcp"],
+      "env": {
+        "PASSWD_ORIGIN": "https://your-company.passwd.team"
+      }
+    }
+  }
+}
+```
+
+### Manual install (from source)
+
+```bash
+git clone https://github.com/nicokant/passwd-mcp.git
+cd passwd-mcp
 npm install
 npm run build
 ```
