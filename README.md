@@ -12,7 +12,42 @@ claude mcp add passwd-mcp -e PASSWD_ORIGIN=https://your-company.passwd.team -- n
 
 That's it — restart Claude Code and verify with `/mcp`.
 
-### Quick install (other MCP clients)
+### OpenClaw
+
+Install the [MCP adapter plugin](https://github.com/androidStern-personal/openclaw-mcp-adapter), then add passwd-mcp to your `~/.openclaw/openclaw.json`:
+
+```bash
+openclaw plugins install mcp-adapter
+```
+
+```json
+{
+  "plugins": {
+    "entries": {
+      "mcp-adapter": {
+        "enabled": true,
+        "config": {
+          "servers": [
+            {
+              "name": "passwd",
+              "transport": "stdio",
+              "command": "npx",
+              "args": ["-y", "passwd-mcp"],
+              "env": {
+                "PASSWD_ORIGIN": "https://your-company.passwd.team"
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Restart the OpenClaw gateway. The adapter discovers all passwd-mcp tools automatically.
+
+### Other MCP clients (Cursor, Windsurf, etc.)
 
 Add to your MCP client config:
 
