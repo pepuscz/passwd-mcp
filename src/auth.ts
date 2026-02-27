@@ -16,7 +16,17 @@ function getOrigin(): string {
       "PASSWD_ORIGIN environment variable is required (e.g. https://your-company.passwd.team)"
     );
   }
-  return origin.replace(/\/+$/, "");
+  const normalized = origin.replace(/\/+$/, "");
+  if (
+    !normalized.startsWith("https://") &&
+    !normalized.startsWith("http://localhost") &&
+    !normalized.startsWith("http://127.0.0.1")
+  ) {
+    throw new Error(
+      "PASSWD_ORIGIN must use HTTPS (or http://localhost for development)"
+    );
+  }
+  return normalized;
 }
 
 function getClientId(): string {
@@ -130,8 +140,11 @@ export async function refreshToken(currentToken: string): Promise<AuthTokens> {
 }
 
 async function saveTokens(tokens: AuthTokens): Promise<void> {
-  await mkdir(TOKEN_DIR, { recursive: true });
-  await writeFile(TOKEN_FILE, JSON.stringify(tokens, null, 2), "utf-8");
+  await mkdir(TOKEN_DIR, { recursive: true, mode: 0o700 });
+  await writeFile(TOKEN_FILE, JSON.stringify(tokens, null, 2), {
+    encoding: "utf-8",
+    mode: 0o600,
+  });
 }
 
 export async function loadTokens(): Promise<AuthTokens | null> {
