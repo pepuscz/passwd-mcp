@@ -9,7 +9,6 @@ import {
   extractCodeFromRedirectUrl,
   exchangeCode,
   loadTokens,
-  getApiUrl,
 } from "./auth.js";
 import {
   listSecrets,
@@ -84,18 +83,20 @@ server.tool(
       .enum(["password", "paymentCard", "apiCredentials", "databaseCredentials", "sshKey", "secureNote"])
       .optional()
       .describe("Filter by secret type"),
-    offset: z.number().optional().describe("Pagination offset"),
-    limit: z.number().optional().describe("Maximum number of results to return"),
+    offset: z.number().optional().describe("Pagination offset (default: 0)"),
+    limit: z.number().optional().describe("Maximum number of results to return (default: 50)"),
   },
   async (params) => {
     try {
       const result = await listSecrets(params);
+      // Strip favicon from list results to save tokens
+      const secrets = result.secrets.map(({ favicon, ...rest }: Record<string, unknown>) => rest);
       return {
         content: [
           {
             type: "text" as const,
             text: JSON.stringify(
-              { totalCount: result.totalCount, secrets: result.secrets },
+              { totalCount: result.totalCount, secrets },
               null,
               2
             ),
@@ -122,11 +123,13 @@ server.tool(
   async ({ id }) => {
     try {
       const secret = await getSecret(id);
+      // Strip favicon (large base64 image) to save tokens
+      const { favicon, ...rest } = secret as unknown as Record<string, unknown>;
       return {
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify(secret, null, 2),
+            text: JSON.stringify(rest, null, 2),
           },
         ],
       };

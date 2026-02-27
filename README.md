@@ -59,7 +59,7 @@ Alternatively, set `PASSWD_ACCESS_TOKEN` to skip the OAuth flow entirely.
 | Tool | Description |
 |---|---|
 | `passwd_login` | Interactive Google OAuth login flow |
-| `list_secrets` | List/search secrets with filtering by query, type, and pagination |
+| `list_secrets` | List/search secrets with filtering by query, type, and pagination (default limit: 50) |
 | `get_secret` | Get full secret details (password, notes, TOTP status) |
 | `create_secret` | Create a new secret (password, paymentCard, apiCredentials, databaseCredentials, sshKey, secureNote) |
 | `update_secret` | Update an existing secret |

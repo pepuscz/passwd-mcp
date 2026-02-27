@@ -23,8 +23,31 @@ function getClientId(): string {
   return process.env.PASSWD_CLIENT_ID || "953910800667-j781s3cmu5isaie59t01195i2ns6l3pj.apps.googleusercontent.com";
 }
 
-export function getApiUrl(): string {
-  return process.env.PASSWD_API_URL || `${getOrigin()}/api`;
+let _discoveredApiUrl: string | null = null;
+
+async function discoverApiUrl(origin: string): Promise<string> {
+  try {
+    const response = await fetch(origin, {
+      headers: { Accept: "text/html" },
+    });
+    const html = await response.text();
+    const match = html.match(/<meta\s+name=["']app-api["']\s+content=["']([^"']+)["']/i);
+    if (match?.[1]) {
+      return match[1].replace(/\/+$/, "");
+    }
+  } catch {
+    // Fall through to default
+  }
+  return `${origin}/api`;
+}
+
+export async function getApiUrl(): Promise<string> {
+  const envUrl = process.env.PASSWD_API_URL;
+  if (envUrl) return envUrl.replace(/\/+$/, "");
+
+  if (_discoveredApiUrl) return _discoveredApiUrl;
+  _discoveredApiUrl = await discoverApiUrl(getOrigin());
+  return _discoveredApiUrl;
 }
 
 function getRedirectUri(): string {
@@ -53,7 +76,7 @@ export function extractCodeFromRedirectUrl(redirectUrl: string): string {
 }
 
 export async function exchangeCode(code: string): Promise<AuthTokens> {
-  const apiUrl = getApiUrl();
+  const apiUrl = await getApiUrl();
   const url = `${apiUrl}/v2/oauth/callback?code=${encodeURIComponent(code)}`;
 
   const response = await fetch(url, {
@@ -81,7 +104,7 @@ export async function exchangeCode(code: string): Promise<AuthTokens> {
 }
 
 export async function refreshToken(currentToken: string): Promise<AuthTokens> {
-  const apiUrl = getApiUrl();
+  const apiUrl = await getApiUrl();
   const url = `${apiUrl}/v2/oauth/refresh-token`;
 
   const response = await fetch(url, {

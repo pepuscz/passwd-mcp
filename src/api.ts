@@ -13,7 +13,7 @@ async function authFetch(
   baseVersion: "v2" | "v3" = "v2",
   retry = true,
 ): Promise<Response> {
-  const apiUrl = getApiUrl();
+  const apiUrl = await getApiUrl();
   const token = await getAccessToken();
   const url = `${apiUrl}/${baseVersion}${path}`;
 
@@ -68,17 +68,9 @@ export interface ListSecretsResult {
 }
 
 export async function listSecrets(params: ListSecretsParams = {}): Promise<ListSecretsResult> {
-  const searchParams = new URLSearchParams();
-  if (params.query) searchParams.set("query", params.query);
-  if (params.secretType) searchParams.set("secretType", params.secretType);
-  if (params.offset !== undefined) searchParams.set("offset", String(params.offset));
-  if (params.limit !== undefined) searchParams.set("limit", String(params.limit));
-
-  const qs = searchParams.toString();
-  const path = `/secrets${qs ? `?${qs}` : ""}`;
-
-  const response = await authFetch(path, {}, "v3");
-  const totalCount = parseInt(response.headers.get("x-total-count") || "0", 10);
+  // The API does not support query parameters for filtering/pagination,
+  // so we fetch all secrets and filter/paginate client-side.
+  const response = await authFetch("/secrets", {}, "v3");
   const data = await handleResponse<Record<string, SecretListItem> | SecretListItem[]>(response);
 
   // API may return object keyed by id or array
@@ -90,6 +82,29 @@ export async function listSecrets(params: ListSecretsParams = {}): Promise<ListS
   } else {
     secrets = [];
   }
+
+  // Client-side filtering by secret type
+  if (params.secretType) {
+    secrets = secrets.filter((s) => s.type === params.secretType);
+  }
+
+  // Client-side filtering by query (case-insensitive match on name, username, or web)
+  if (params.query) {
+    const q = params.query.toLowerCase();
+    secrets = secrets.filter(
+      (s) =>
+        s.name?.toLowerCase().includes(q) ||
+        s.username?.toLowerCase().includes(q) ||
+        s.web?.toLowerCase().includes(q)
+    );
+  }
+
+  const totalCount = secrets.length;
+
+  // Client-side pagination
+  const offset = params.offset ?? 0;
+  const limit = params.limit ?? 50;
+  secrets = secrets.slice(offset, offset + limit);
 
   return { secrets, totalCount };
 }
