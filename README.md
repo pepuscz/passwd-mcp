@@ -33,7 +33,7 @@ Add to your MCP client config:
 ### Manual install (from source)
 
 ```bash
-git clone https://github.com/nicokant/passwd-mcp.git
+git clone https://github.com/pepuscz/passwd-mcp.git
 cd passwd-mcp
 npm install
 npm run build
