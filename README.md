@@ -33,7 +33,7 @@ In all examples below, replace `https://your-company.passwd.team` with your pass
 ```bash
 claude mcp add passwd-mcp \
   -e PASSWD_ORIGIN=https://your-company.passwd.team \
-  -- npx -y @pepuscz/passwd-mcp
+  -- npx -y @pepuscz/passwd-mcp@1.0.1
 ```
 
 Restart Claude Code and verify with `/mcp`.
@@ -47,7 +47,7 @@ Open **Settings → Developer → Edit Config** (`~/Library/Application Support/
   "mcpServers": {
     "passwd-mcp": {
       "command": "npx",
-      "args": ["-y", "@pepuscz/passwd-mcp"],
+      "args": ["-y", "@pepuscz/passwd-mcp@1.0.1"],
       "env": {
         "PASSWD_ORIGIN": "https://your-company.passwd.team"
       }
@@ -67,7 +67,7 @@ Add to your project's `.cursor/mcp.json` or `.windsurf/mcp.json`:
   "mcpServers": {
     "passwd-mcp": {
       "command": "npx",
-      "args": ["-y", "@pepuscz/passwd-mcp"],
+      "args": ["-y", "@pepuscz/passwd-mcp@1.0.1"],
       "env": {
         "PASSWD_ORIGIN": "https://your-company.passwd.team"
       }
@@ -85,7 +85,7 @@ Add a server entry to `~/.openclaw/openclaw.json` inside `plugins.entries.opencl
   "name": "passwd-mcp",
   "transport": "stdio",
   "command": "npx",
-  "args": ["-y", "@pepuscz/passwd-mcp"],
+  "args": ["-y", "@pepuscz/passwd-mcp@1.0.1"],
   "env": {
     "PASSWD_ORIGIN": "https://your-company.passwd.team"
   }
@@ -115,20 +115,24 @@ Always confirm before deleting secrets.
 
 ```bash
 export PASSWD_ORIGIN=https://your-company.passwd.team
-npx @pepuscz/passwd-cli login
-npx @pepuscz/passwd-cli list
-npx @pepuscz/passwd-cli --help
+npx @pepuscz/passwd-cli@1.0.1 login
+npx @pepuscz/passwd-cli@1.0.1 list
+npx @pepuscz/passwd-cli@1.0.1 --help
 ```
 
 ### Building from source
 
 ```bash
 git clone https://github.com/pepuscz/passwd.git
-cd passwd-mcp
+cd passwd
 npm install && npm run build
 ```
 
 Then use `node packages/passwd-mcp/dist/index.js` or `node packages/passwd-cli/dist/index.js` in place of `npx` commands above.
+
+## Upgrading
+
+Check [releases](https://github.com/pepuscz/passwd/releases) for new versions, then update the version number in your MCP config (e.g. `@1.0.1` → `@1.0.2`) and restart the client.
 
 ## Authentication
 
