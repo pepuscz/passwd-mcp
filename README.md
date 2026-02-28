@@ -1,24 +1,31 @@
 # passwd
 
-TypeScript toolkit for [passwd.team](https://passwd.team) — three packages in one monorepo:
+MCP server + CLI for [passwd.team](https://passwd.team) password manager.
 
-| Package | Description |
-|---|---|
-| **passwd-mcp** | MCP server for Claude Code, Cursor, Windsurf, OpenClaw |
-| **passwd-cli** | Command-line interface for humans and scripts |
-| **passwd-lib** | Core library — auth, API client, types (zero dependencies) |
+Gives your AI assistant full access to your team's passwords, TOTP codes, secure notes, and file attachments — create, read, update, delete, and share secrets through natural language.
 
-## Quick start: MCP server for Claude Code
+## What it can do
+
+- **Search & retrieve** passwords, API keys, SSH keys, payment cards, secure notes
+- **Create & update** secrets with all field types
+- **Generate TOTP codes** on demand
+- **Share secrets** with groups or individual users, with granular permissions (read, write, autofillOnly, passkeyOnly)
+- **Attach files** to secrets (certificates, configs, etc.)
+- **List groups & contacts** in your workspace for easy sharing
+
+## Setup
+
+### Claude Code
 
 ```bash
 claude mcp add passwd-mcp -e PASSWD_ORIGIN=https://your-company.passwd.team -- npx passwd-mcp
 ```
 
-Restart Claude Code and verify with `/mcp`. Then ask Claude to list your passwords — it will prompt you to authenticate on first use.
+Restart Claude Code and verify with `/mcp`.
 
-### Other MCP clients (Cursor, Windsurf, OpenClaw)
+### Claude Desktop / Cowork
 
-Add to your MCP client config:
+Open **Settings → Developer → Edit Config** and add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
@@ -34,79 +41,119 @@ Add to your MCP client config:
 }
 ```
 
-### MCP tools
+Restart Claude Desktop.
 
-| Tool | Description |
-|---|---|
-| `passwd_login` | Interactive Google OAuth login flow |
-| `list_secrets` | List/search secrets (filter by query, type; default limit: 50) |
-| `get_secret` | Get full secret details |
-| `create_secret` | Create a new secret |
-| `update_secret` | Update an existing secret |
-| `delete_secret` | Delete a secret |
-| `get_totp_code` | Get current TOTP code |
-| `share_secret` | Enable or revoke sharing |
-| `get_current_user` | Get authenticated user profile |
+### Cursor / Windsurf
 
-## Quick start: CLI
+Add to your project's `.cursor/mcp.json` or `.windsurf/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "passwd-mcp": {
+      "command": "npx",
+      "args": ["passwd-mcp"],
+      "env": {
+        "PASSWD_ORIGIN": "https://your-company.passwd.team"
+      }
+    }
+  }
+}
+```
+
+### OpenClaw
+
+Add a server entry to `~/.openclaw/openclaw.json` inside `plugins.entries.openclaw-mcp-adapter.config.servers`:
+
+```json
+{
+  "name": "passwd-mcp",
+  "transport": "stdio",
+  "command": "npx",
+  "args": ["passwd-mcp"],
+  "env": {
+    "PASSWD_ORIGIN": "https://your-company.passwd.team"
+  }
+}
+```
+
+Restart the gateway (`launchctl bootout` / `bootstrap`). Then add instructions to your `AGENTS.md` so the model knows when to use the tools:
+
+```markdown
+## Password Manager (passwd.team)
+
+You have access to the team password manager via MCP tools prefixed with `passwd_` and `list_`/`get_`/`create_`/`update_`/`delete_`/`share_`.
+
+When the user asks about passwords, credentials, API keys, or secrets:
+1. Use `list_secrets` to search by name
+2. Use `get_secret` to retrieve full details including the password
+3. Use `get_totp_code` if they need a one-time code
+
+When the user wants to create or share a secret:
+1. Use `list_groups` or `list_contacts` to find the right group/user IDs
+2. Use `create_secret` or `update_secret` with the appropriate sharing fields
+
+Always confirm before deleting secrets.
+```
+
+### CLI
 
 ```bash
-npx passwd-cli login
-npx passwd-cli list
-npx passwd-cli get <id>
-npx passwd-cli get <id> --field password
+npx passwd-cli login          # authenticate with Google OAuth
+npx passwd-cli list            # list all secrets
+npx passwd-cli get <id>        # get secret details
+npx passwd-cli groups          # list workspace groups
+npx passwd-cli contacts        # list workspace contacts
+npx passwd-cli --help          # see all commands
 ```
-
-### Inject secrets into a command
-
-```bash
-npx passwd-cli exec --inject DB_PASSWORD=abc123:password -- env
-```
-
-This fetches the `password` field from secret `abc123`, sets it as `DB_PASSWORD` in the environment, and runs `env`.
-
-### All CLI commands
-
-```
-passwd login                     Authenticate with Google OAuth
-passwd whoami                    Show current user
-passwd list [-q text] [-t type]  List/search secrets
-passwd get <id> [--field name]   Get a secret (--field outputs raw value)
-passwd create -t type -n name    Create a new secret
-passwd update <id> [options]     Update a secret
-passwd delete <id> [-y]          Delete a secret
-passwd totp <id>                 Get current TOTP code
-passwd share <id> [--revoke]     Enable/revoke sharing
-passwd exec --inject VAR=ID:FIELD -- cmd   Run command with secrets as env vars
-```
-
-## Library usage
-
-```typescript
-import { listSecrets, getSecret, getAccessToken } from "passwd-lib";
-
-// Requires PASSWD_ORIGIN env var and prior authentication
-const { secrets } = await listSecrets({ query: "github" });
-const secret = await getSecret(secrets[0].id);
-console.log(secret.password);
-```
-
-## Configuration
-
-All configuration is via environment variables:
-
-| Variable | Required | Description |
-|---|---|---|
-| `PASSWD_ORIGIN` | **Yes** | Frontend origin (e.g. `https://your-company.passwd.team`) |
-| `PASSWD_API_URL` | No | API base URL override |
-| `PASSWD_CLIENT_ID` | No | Google OAuth client ID override |
-| `PASSWD_ACCESS_TOKEN` | No | Skip OAuth — use a pre-existing Bearer token |
 
 ## Authentication
 
-Both the MCP server and CLI use Google OAuth2. Tokens are cached at `~/.passwd-mcp/tokens.json` and auto-refresh on 401 responses.
+Google OAuth2. On first use, the `passwd_login` tool (MCP) or `passwd login` (CLI) will guide you through authentication. Tokens are cached at `~/.passwd-mcp/tokens.json` and auto-refresh.
 
-Set `PASSWD_ACCESS_TOKEN` to skip the OAuth flow entirely.
+Set `PASSWD_ACCESS_TOKEN` env var to skip OAuth entirely.
+
+## MCP tools reference
+
+| Tool | Description |
+|---|---|
+| `passwd_login` | Google OAuth login flow |
+| `list_secrets` | Search/list secrets (filter by query, type; paginate) |
+| `get_secret` | Get full secret details including password |
+| `create_secret` | Create a secret (all types, with sharing, files, visibleToAll) |
+| `update_secret` | Update a secret |
+| `delete_secret` | Delete a secret |
+| `get_totp_code` | Get current TOTP code for a secret |
+| `share_secret` | Enable or revoke a share link |
+| `get_current_user` | Get authenticated user profile |
+| `list_groups` | List workspace groups (IDs for sharing) |
+| `list_contacts` | List workspace contacts (IDs for sharing) |
+
+## CLI commands reference
+
+| Command | Description |
+|---|---|
+| `passwd login` | Authenticate with Google OAuth |
+| `passwd whoami` | Show current user |
+| `passwd list` | List/search secrets (`-q`, `-t`, `--json`) |
+| `passwd get <id>` | Get a secret (`--field` for raw value) |
+| `passwd create` | Create a secret (`-t`, `-n`, `--group`, `--user`, `--file`, `--visible-to-all`) |
+| `passwd update <id>` | Update a secret (`--group`, `--user`, `--file`, `--remove-file`, `--visible-to-all`) |
+| `passwd delete <id>` | Delete a secret (`-y` to skip confirmation) |
+| `passwd totp <id>` | Get current TOTP code |
+| `passwd share <id>` | Enable/revoke sharing (`--revoke`) |
+| `passwd groups` | List workspace groups |
+| `passwd contacts` | List workspace contacts |
+| `passwd exec` | Run command with secrets as env vars (`--inject VAR=ID:FIELD`) |
+
+## Configuration
+
+| Variable | Required | Description |
+|---|---|---|
+| `PASSWD_ORIGIN` | **Yes** | Your passwd.team URL (e.g. `https://your-company.passwd.team`) |
+| `PASSWD_ACCESS_TOKEN` | No | Skip OAuth — use a pre-existing Bearer token |
+| `PASSWD_API_URL` | No | API base URL override |
+| `PASSWD_CLIENT_ID` | No | Google OAuth client ID override |
 
 ## Development
 
@@ -114,18 +161,14 @@ Set `PASSWD_ACCESS_TOKEN` to skip the OAuth flow entirely.
 git clone https://github.com/pepuscz/passwd-mcp.git
 cd passwd-mcp
 npm install
-npm run build        # tsc -b builds lib -> mcp + cli
-npx passwd --help
-npx passwd-mcp       # starts MCP server on stdio
+npm run build
 ```
-
-## Project structure
 
 ```
 packages/
-  passwd-lib/   Core library (types, auth, API client)
+  passwd-lib/   Core library (types, auth, API — zero dependencies)
   passwd-mcp/   MCP server (depends on passwd-lib)
-  passwd-cli/   CLI tool (depends on passwd-lib)
+  passwd-cli/   CLI (depends on passwd-lib)
 ```
 
 ## License
