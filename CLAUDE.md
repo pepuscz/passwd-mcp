@@ -1,59 +1,41 @@
-# passwd-mcp
+# passwd
 
-MCP server for [passwd.team](https://passwd.team) — gives Claude access to your team's password manager.
+Monorepo with three npm packages for [passwd.team](https://passwd.team):
 
-## Install
+- **passwd-lib** — core library (auth, API client, types). Zero dependencies.
+- **passwd-mcp** — MCP server for AI assistants. Depends on passwd-lib, @modelcontextprotocol/sdk, zod.
+- **passwd-cli** — CLI tool. Depends on passwd-lib, commander.
+
+## Build
 
 ```bash
-claude mcp add passwd-mcp -- npx passwd-mcp
+npm install          # links workspaces
+npm run build        # tsc -b (builds lib first, then mcp + cli)
+npm run clean        # tsc -b --clean
 ```
-
-Then set the required environment variable in your MCP config:
-
-```json
-{
-  "mcpServers": {
-    "passwd-mcp": {
-      "command": "npx",
-      "args": ["passwd-mcp"],
-      "env": {
-        "PASSWD_ORIGIN": "https://your-company.passwd.team"
-      }
-    }
-  }
-}
-```
-
-## Required env vars
-
-- `PASSWD_ORIGIN` — your passwd deployment URL (e.g. `https://your-company.passwd.team`)
-
-## Authentication
-
-On first use, call the `passwd_login` tool to start the Google OAuth flow. The server will give you a URL to open in your browser. After authenticating, paste the redirect URL back. Tokens are cached at `~/.passwd-mcp/tokens.json`.
-
-Alternatively, set `PASSWD_ACCESS_TOKEN` to skip OAuth entirely.
-
-## Available tools
-
-- `passwd_login` — authenticate via Google OAuth
-- `list_secrets` — list/search secrets (filter by query, type)
-- `get_secret` — get full secret details including password
-- `create_secret` — create a new secret
-- `update_secret` — update an existing secret
-- `delete_secret` — delete a secret (irreversible)
-- `get_totp_code` — get current TOTP code
-- `share_secret` — enable/revoke sharing links
-- `get_current_user` — get authenticated user profile
 
 ## Project structure
 
 ```
-src/
-  index.ts   — MCP server entry point, tool registration
-  auth.ts    — Google OAuth flow, token storage/refresh
-  api.ts     — passwd REST API client
-  types.ts   — TypeScript interfaces
+packages/
+  passwd-lib/src/    types.ts, auth.ts, api.ts, index.ts (barrel)
+  passwd-mcp/src/    index.ts (MCP server with 9 tools)
+  passwd-cli/src/    index.ts (commander), commands/*.ts, util/format.ts
 ```
 
-Build: `npm run build` — compiles to `dist/`.
+## Key design decisions
+
+- npm workspaces with TypeScript project references (`composite: true`, `tsc -b`)
+- passwd-lib has zero npm dependencies — only Node.js built-ins
+- Client-side filtering: the passwd API returns all secrets at once. Filtering/pagination is done in `listSecrets()`. MCP defaults to limit 50, CLI defaults to no limit.
+- `passwd get <id> --field password` outputs raw value with no trailing newline (for `$()` piping)
+- `passwd exec --inject VAR=ID:FIELD` fetches secrets in parallel, execs child with `stdio: inherit`
+
+## Required env var
+
+`PASSWD_ORIGIN` — your passwd deployment URL (e.g. `https://your-company.passwd.team`)
+
+## Authentication
+
+Google OAuth2. Tokens cached at `~/.passwd-mcp/tokens.json`. Auto-refreshes on 401.
+Skip with `PASSWD_ACCESS_TOKEN` env var.

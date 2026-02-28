@@ -1,4 +1,4 @@
-import { getApiUrl, getAccessToken, refreshToken, loadTokens } from "./auth.js";
+import { getApiUrl, getAccessToken, refreshToken } from "./auth.js";
 import type {
   Secret,
   SecretListItem,
@@ -38,7 +38,7 @@ async function authFetch(
       });
       return retryResponse;
     } catch {
-      throw new Error("Authentication expired. Please use passwd_login to re-authenticate.");
+      throw new Error("Authentication expired. Please re-authenticate.");
     }
   }
 
@@ -103,8 +103,11 @@ export async function listSecrets(params: ListSecretsParams = {}): Promise<ListS
 
   // Client-side pagination
   const offset = params.offset ?? 0;
-  const limit = params.limit ?? 50;
-  secrets = secrets.slice(offset, offset + limit);
+  if (params.limit !== undefined) {
+    secrets = secrets.slice(offset, offset + params.limit);
+  } else if (offset > 0) {
+    secrets = secrets.slice(offset);
+  }
 
   return { secrets, totalCount };
 }

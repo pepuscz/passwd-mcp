@@ -9,8 +9,6 @@ import {
   extractCodeFromRedirectUrl,
   exchangeCode,
   loadTokens,
-} from "./auth.js";
-import {
   listSecrets,
   getSecret,
   createSecret,
@@ -20,7 +18,7 @@ import {
   enableSharing,
   revokeSharing,
   getCurrentUser,
-} from "./api.js";
+} from "passwd-lib";
 
 const server = new McpServer({
   name: "passwd-mcp",
@@ -88,7 +86,7 @@ server.tool(
   },
   async (params) => {
     try {
-      const result = await listSecrets(params);
+      const result = await listSecrets({ ...params, limit: params.limit ?? 50 });
       // Strip favicon from list results to save tokens
       const secrets = result.secrets.map(({ favicon, ...rest }: Record<string, unknown>) => rest);
       return {

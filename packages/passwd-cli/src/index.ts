@@ -1,0 +1,122 @@
+#!/usr/bin/env node
+
+import { Command } from "commander";
+import { loginCommand } from "./commands/login.js";
+import { whoamiCommand } from "./commands/whoami.js";
+import { listCommand } from "./commands/list.js";
+import { getCommand } from "./commands/get.js";
+import { createCommand } from "./commands/create.js";
+import { updateCommand } from "./commands/update.js";
+import { deleteCommand } from "./commands/delete.js";
+import { totpCommand } from "./commands/totp.js";
+import { shareCommand } from "./commands/share.js";
+import { execCommand } from "./commands/exec.js";
+import { formatError } from "./util/format.js";
+
+const program = new Command();
+
+program
+  .name("passwd")
+  .description("CLI for passwd.team password manager")
+  .version("1.0.0");
+
+program
+  .command("login")
+  .description("Authenticate with Google OAuth")
+  .action(() => loginCommand().catch(die));
+
+program
+  .command("whoami")
+  .description("Show current user")
+  .option("--json", "Output as JSON")
+  .action((opts) => whoamiCommand(opts).catch(die));
+
+program
+  .command("list")
+  .description("List secrets")
+  .option("-q, --query <text>", "Search by name, username, or URL")
+  .option("-t, --type <type>", "Filter by secret type")
+  .option("-l, --limit <n>", "Maximum results")
+  .option("-o, --offset <n>", "Skip first N results")
+  .option("--json", "Output as JSON")
+  .action((opts) => listCommand(opts).catch(die));
+
+program
+  .command("get <id>")
+  .description("Get a secret")
+  .option("-f, --field <name>", "Output a single field (raw, no newline)")
+  .option("--json", "Output as JSON")
+  .action((id, opts) => getCommand(id, opts).catch(die));
+
+program
+  .command("create")
+  .description("Create a new secret")
+  .requiredOption("-t, --type <type>", "Secret type (password, paymentCard, apiCredentials, databaseCredentials, sshKey, secureNote)")
+  .requiredOption("-n, --name <name>", "Secret name")
+  .option("-u, --username <user>", "Username")
+  .option("-p, --password <pass>", "Password")
+  .option("-w, --web <url>", "Website URL")
+  .option("--note <text>", "Note")
+  .option("--tags <tags...>", "Tags")
+  .option("--groups <ids...>", "Group IDs")
+  .option("--totp <secret>", "TOTP secret key")
+  .option("--card-number <num>", "Card number")
+  .option("--cvv-code <code>", "CVV code")
+  .option("--credentials <creds>", "Database credentials")
+  .option("--private-key <key>", "SSH private key")
+  .option("--secure-note <text>", "Secure note content")
+  .action((opts) => createCommand(opts).catch(die));
+
+program
+  .command("update <id>")
+  .description("Update a secret")
+  .option("-n, --name <name>", "Name")
+  .option("-u, --username <user>", "Username")
+  .option("-p, --password <pass>", "Password")
+  .option("-w, --web <url>", "Website URL")
+  .option("--note <text>", "Note")
+  .option("--tags <tags...>", "Tags")
+  .option("--groups <ids...>", "Group IDs")
+  .option("--totp <secret>", "TOTP secret key")
+  .option("--card-number <num>", "Card number")
+  .option("--cvv-code <code>", "CVV code")
+  .option("--credentials <creds>", "Database credentials")
+  .option("--private-key <key>", "SSH private key")
+  .option("--secure-note <text>", "Secure note content")
+  .action((id, opts) => updateCommand(id, opts).catch(die));
+
+program
+  .command("delete <id>")
+  .description("Delete a secret (irreversible)")
+  .option("-y, --yes", "Skip confirmation prompt")
+  .action((id, opts) => deleteCommand(id, opts).catch(die));
+
+program
+  .command("totp <id>")
+  .description("Get current TOTP code")
+  .option("--json", "Output as JSON (includes remaining seconds)")
+  .action((id, opts) => totpCommand(id, opts).catch(die));
+
+program
+  .command("share <id>")
+  .description("Enable or revoke sharing")
+  .option("--revoke", "Revoke sharing instead of enabling")
+  .option("--json", "Output as JSON")
+  .action((id, opts) => shareCommand(id, opts).catch(die));
+
+program
+  .command("exec")
+  .description("Run a command with secrets injected as environment variables")
+  .option("--inject <mapping...>", "VAR=SECRET_ID:FIELD (repeatable)")
+  .allowUnknownOption(true)
+  .action((opts, cmd) => {
+    // Everything after -- becomes cmd.args
+    execCommand(cmd.args, opts).catch(die);
+  });
+
+function die(err: unknown): void {
+  console.error(`Error: ${formatError(err)}`);
+  process.exitCode = 1;
+}
+
+program.parse();

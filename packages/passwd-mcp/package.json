@@ -1,0 +1,29 @@
+{
+  "name": "passwd-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for passwd.team password manager",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "passwd-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "keywords": [
+    "mcp",
+    "passwd",
+    "password-manager",
+    "claude",
+    "model-context-protocol"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "passwd-lib": "1.0.0",
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod": "^3.24.2"
+  }
+}

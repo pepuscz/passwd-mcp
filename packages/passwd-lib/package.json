@@ -1,0 +1,26 @@
+{
+  "name": "passwd-lib",
+  "version": "1.0.0",
+  "description": "Core library for passwd.team — auth, API client, and types",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "keywords": [
+    "passwd",
+    "password-manager",
+    "passwd-team"
+  ],
+  "license": "MIT"
+}

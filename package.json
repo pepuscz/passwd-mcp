@@ -1,38 +1,22 @@
 {
-  "name": "passwd-mcp",
-  "version": "1.0.0",
-  "description": "MCP server for passwd.team password manager",
+  "private": true,
   "type": "module",
-  "main": "dist/index.js",
-  "bin": {
-    "passwd-mcp": "dist/index.js"
-  },
-  "files": [
-    "dist"
+  "workspaces": [
+    "packages/passwd-lib",
+    "packages/passwd-mcp",
+    "packages/passwd-cli"
   ],
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "prepublishOnly": "npm run build"
+    "build": "tsc -b",
+    "clean": "tsc -b --clean"
   },
-  "keywords": [
-    "mcp",
-    "passwd",
-    "password-manager",
-    "claude",
-    "model-context-protocol"
-  ],
-  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.13.5",
+    "typescript": "^5.7.3"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/pepuscz/passwd-mcp.git"
   },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.1",
-    "zod": "^3.24.2"
-  },
-  "devDependencies": {
-    "typescript": "^5.7.3",
-    "@types/node": "^22.13.5"
-  }
+  "license": "MIT"
 }

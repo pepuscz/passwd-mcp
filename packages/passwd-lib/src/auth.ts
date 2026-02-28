@@ -165,7 +165,7 @@ export async function loadTokens(): Promise<AuthTokens | null> {
 export async function getAccessToken(): Promise<string> {
   const tokens = await loadTokens();
   if (!tokens) {
-    throw new Error("Not authenticated. Use the passwd_login tool to log in first.");
+    throw new Error("Not authenticated. Run 'passwd login' or set PASSWD_ACCESS_TOKEN.");
   }
   return tokens.access_token;
 }

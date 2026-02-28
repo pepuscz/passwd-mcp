@@ -1,0 +1,27 @@
+{
+  "name": "passwd-cli",
+  "version": "1.0.0",
+  "description": "CLI for passwd.team password manager",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "passwd": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "keywords": [
+    "passwd",
+    "password-manager",
+    "cli",
+    "passwd-team"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "passwd-lib": "1.0.0",
+    "commander": "^13.1.0"
+  }
+}
