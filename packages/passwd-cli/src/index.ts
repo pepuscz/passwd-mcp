@@ -11,6 +11,8 @@ import { deleteCommand } from "./commands/delete.js";
 import { totpCommand } from "./commands/totp.js";
 import { shareCommand } from "./commands/share.js";
 import { execCommand } from "./commands/exec.js";
+import { groupsCommand } from "./commands/groups.js";
+import { contactsCommand } from "./commands/contacts.js";
 import { formatError } from "./util/format.js";
 
 const program = new Command();
@@ -59,7 +61,10 @@ program
   .option("-w, --web <url>", "Website URL")
   .option("--note <text>", "Note")
   .option("--tags <tags...>", "Tags")
-  .option("--groups <ids...>", "Group IDs")
+  .option("--group <id:perms>", "Share with group (ID:read,write — repeatable)", collect, undefined)
+  .option("--user <id:perms>", "Share with user (ID:read,write — repeatable)", collect, undefined)
+  .option("--file <path>", "Attach a file")
+  .option("--visible-to-all", "Make visible to all workspace users")
   .option("--totp <secret>", "TOTP secret key")
   .option("--card-number <num>", "Card number")
   .option("--cvv-code <code>", "CVV code")
@@ -77,7 +82,11 @@ program
   .option("-w, --web <url>", "Website URL")
   .option("--note <text>", "Note")
   .option("--tags <tags...>", "Tags")
-  .option("--groups <ids...>", "Group IDs")
+  .option("--group <id:perms>", "Share with group (ID:read,write — repeatable)", collect, undefined)
+  .option("--user <id:perms>", "Share with user (ID:read,write — repeatable)", collect, undefined)
+  .option("--file <path>", "Attach a file")
+  .option("--remove-file", "Remove existing file attachment")
+  .option("--visible-to-all", "Make visible to all workspace users")
   .option("--totp <secret>", "TOTP secret key")
   .option("--card-number <num>", "Card number")
   .option("--cvv-code <code>", "CVV code")
@@ -106,6 +115,18 @@ program
   .action((id, opts) => shareCommand(id, opts).catch(die));
 
 program
+  .command("groups")
+  .description("List available groups")
+  .option("--json", "Output as JSON")
+  .action((opts) => groupsCommand(opts).catch(die));
+
+program
+  .command("contacts")
+  .description("List available contacts")
+  .option("--json", "Output as JSON")
+  .action((opts) => contactsCommand(opts).catch(die));
+
+program
   .command("exec")
   .description("Run a command with secrets injected as environment variables")
   .option("--inject <mapping...>", "VAR=SECRET_ID:FIELD (repeatable)")
@@ -114,6 +135,11 @@ program
   .action((args, opts) => {
     execCommand(args, opts).catch(die);
   });
+
+/** Commander repeatable-option accumulator. */
+function collect(val: string, prev: string[] | undefined): string[] {
+  return prev ? [...prev, val] : [val];
+}
 
 function die(err: unknown): void {
   console.error(`Error: ${formatError(err)}`);

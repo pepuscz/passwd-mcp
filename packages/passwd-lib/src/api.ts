@@ -5,6 +5,8 @@ import type {
   TOTPResponse,
   ShareResponse,
   UserProfile,
+  GroupInfo,
+  ContactInfo,
 } from "./types.js";
 
 async function authFetch(
@@ -169,6 +171,20 @@ export async function revokeSharing(id: string): Promise<void> {
     const text = await response.text();
     throw new Error(`Revoke sharing failed (${response.status}): ${text}`);
   }
+}
+
+// --- Groups & Contacts ---
+
+export async function listGroups(): Promise<GroupInfo[]> {
+  const response = await authFetch("/groups-query");
+  const data = await handleResponse<{ data: GroupInfo[] }>(response);
+  return data.data;
+}
+
+export async function listContacts(): Promise<ContactInfo[]> {
+  const response = await authFetch("/contacts-query");
+  const data = await handleResponse<{ data: ContactInfo[] }>(response);
+  return data.data;
 }
 
 // --- User ---

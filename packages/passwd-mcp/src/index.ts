@@ -17,6 +17,8 @@ import {
   getTotpCode,
   enableSharing,
   revokeSharing,
+  listGroups,
+  listContacts,
   getCurrentUser,
 } from "passwd-lib";
 
@@ -142,6 +144,21 @@ server.tool(
 );
 
 // --- Tool 4: create_secret ---
+const groupRefSchema = z.object({
+  id: z.string(),
+  accessPermissions: z.array(z.enum(["read", "write", "autofillOnly", "passkeyOnly"])),
+}).describe("Group reference with access permissions");
+
+const userRefSchema = z.object({
+  id: z.string(),
+  accessPermissions: z.array(z.enum(["read", "write", "autofillOnly", "passkeyOnly"])),
+}).describe("User reference with access permissions");
+
+const fileSchema = z.object({
+  name: z.string(),
+  data: z.string().describe("Data URI, e.g. data:text/plain;base64,SGVsbG8="),
+}).nullable().describe("File attachment (null to remove)");
+
 server.tool(
   "create_secret",
   "Create a new secret in passwd.team. Supports types: password, paymentCard, apiCredentials, databaseCredentials, sshKey, secureNote.",
@@ -155,7 +172,10 @@ server.tool(
     web: z.string().optional().describe("Website URL"),
     note: z.string().optional().describe("Notes"),
     tags: z.array(z.string()).optional().describe("Tags to categorize the secret"),
-    groups: z.array(z.string()).optional().describe("Group IDs to share with"),
+    groups: z.array(groupRefSchema).optional().describe("Groups to share with (use list_groups to find IDs)"),
+    whitelistUsers: z.array(userRefSchema).optional().describe("Users to share with (use list_contacts to find IDs)"),
+    file: fileSchema.optional().describe("File attachment as data URI"),
+    visibleToAll: z.boolean().optional().describe("Make visible to all workspace users"),
     TOTP: z.string().optional().describe("TOTP secret key for generating one-time codes"),
     cardNumber: z.string().optional().describe("Card number (for paymentCard type)"),
     cvvCode: z.string().optional().describe("CVV code (for paymentCard type)"),
@@ -196,7 +216,10 @@ server.tool(
     web: z.string().optional().describe("Updated website URL"),
     note: z.string().optional().describe("Updated notes"),
     tags: z.array(z.string()).optional().describe("Updated tags"),
-    groups: z.array(z.string()).optional().describe("Updated group IDs"),
+    groups: z.array(groupRefSchema).optional().describe("Groups to share with (use list_groups to find IDs)"),
+    whitelistUsers: z.array(userRefSchema).optional().describe("Users to share with (use list_contacts to find IDs)"),
+    file: fileSchema.optional().describe("File attachment as data URI (null to remove)"),
+    visibleToAll: z.boolean().optional().describe("Make visible to all workspace users"),
     TOTP: z.string().optional().describe("Updated TOTP secret key"),
     cardNumber: z.string().optional().describe("Updated card number"),
     cvvCode: z.string().optional().describe("Updated CVV code"),
@@ -342,6 +365,58 @@ server.tool(
       const msg = error instanceof Error ? error.message : String(error);
       return {
         content: [{ type: "text" as const, text: `Failed to get user profile: ${msg}` }],
+        isError: true,
+      };
+    }
+  }
+);
+
+// --- Tool 10: list_groups ---
+server.tool(
+  "list_groups",
+  "List available groups in the workspace. Use group IDs when sharing secrets via create_secret or update_secret.",
+  {},
+  async () => {
+    try {
+      const groups = await listGroups();
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(groups, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      return {
+        content: [{ type: "text" as const, text: `Failed to list groups: ${msg}` }],
+        isError: true,
+      };
+    }
+  }
+);
+
+// --- Tool 11: list_contacts ---
+server.tool(
+  "list_contacts",
+  "List available contacts (users) in the workspace. Use contact IDs when sharing secrets via whitelistUsers in create_secret or update_secret.",
+  {},
+  async () => {
+    try {
+      const contacts = await listContacts();
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(contacts, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      return {
+        content: [{ type: "text" as const, text: `Failed to list contacts: ${msg}` }],
         isError: true,
       };
     }

@@ -19,6 +19,38 @@ export type SecretType =
   | "sshKey"
   | "secureNote";
 
+export type AccessPermission = "read" | "write" | "autofillOnly" | "passkeyOnly";
+
+export interface GroupRef {
+  id: string;
+  accessPermissions: AccessPermission[];
+}
+
+export interface UserRef {
+  id: string;
+  accessPermissions: AccessPermission[];
+}
+
+export interface SecretFile {
+  name: string;
+  data: string;
+}
+
+export interface GroupInfo {
+  id: string;
+  name: string;
+  email: string;
+  visible: boolean;
+}
+
+export interface ContactInfo {
+  id: string;
+  email: string;
+  name: string;
+  isAdmin: boolean;
+  isWorkspaceAdmin: boolean;
+}
+
 export interface SecretBase {
   id?: string;
   type: SecretType;
@@ -27,7 +59,10 @@ export interface SecretBase {
   web?: string;
   note?: string;
   tags?: string[];
-  groups?: string[];
+  groups?: GroupRef[];
+  whitelistUsers?: UserRef[];
+  file?: SecretFile | null;
+  visibleToAll?: boolean;
   hasTOTP?: boolean;
   TOTP?: string | null;
   passwordUpdatedAt?: string;
