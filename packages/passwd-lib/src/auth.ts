@@ -1,4 +1,5 @@
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, chmod } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import type { AuthTokens } from "./types.js";
@@ -9,6 +10,18 @@ const SCOPES = "https://www.googleapis.com/auth/userinfo.profile https://www.goo
 const TOKEN_DIR = join(homedir(), ".passwd-mcp");
 const TOKEN_FILE = join(TOKEN_DIR, "tokens.json");
 
+function requireHttps(url: string, label: string): void {
+  if (
+    !url.startsWith("https://") &&
+    !url.startsWith("http://localhost") &&
+    !url.startsWith("http://127.0.0.1")
+  ) {
+    throw new Error(
+      `${label} must use HTTPS (or http://localhost for development), got: ${url}`
+    );
+  }
+}
+
 function getOrigin(): string {
   const origin = process.env.PASSWD_ORIGIN;
   if (!origin) {
@@ -17,15 +30,7 @@ function getOrigin(): string {
     );
   }
   const normalized = origin.replace(/\/+$/, "");
-  if (
-    !normalized.startsWith("https://") &&
-    !normalized.startsWith("http://localhost") &&
-    !normalized.startsWith("http://127.0.0.1")
-  ) {
-    throw new Error(
-      "PASSWD_ORIGIN must use HTTPS (or http://localhost for development)"
-    );
-  }
+  requireHttps(normalized, "PASSWD_ORIGIN");
   return normalized;
 }
 
@@ -43,7 +48,9 @@ async function discoverApiUrl(origin: string): Promise<string> {
     const html = await response.text();
     const match = html.match(/<meta\s+name=["']app-api["']\s+content=["']([^"']+)["']/i);
     if (match?.[1]) {
-      return match[1].replace(/\/+$/, "");
+      const discovered = match[1].replace(/\/+$/, "");
+      requireHttps(discovered, "Discovered API URL");
+      return discovered;
     }
   } catch {
     // Fall through to default
@@ -53,7 +60,11 @@ async function discoverApiUrl(origin: string): Promise<string> {
 
 export async function getApiUrl(): Promise<string> {
   const envUrl = process.env.PASSWD_API_URL;
-  if (envUrl) return envUrl.replace(/\/+$/, "");
+  if (envUrl) {
+    const normalized = envUrl.replace(/\/+$/, "");
+    requireHttps(normalized, "PASSWD_API_URL");
+    return normalized;
+  }
 
   if (_discoveredApiUrl) return _discoveredApiUrl;
   _discoveredApiUrl = await discoverApiUrl(getOrigin());
@@ -64,11 +75,16 @@ function getRedirectUri(): string {
   return `${getOrigin()}/oauth/redirect`;
 }
 
+let _pendingOAuthState: string | null = null;
+
 export function buildOAuthUrl(): string {
+  const state = randomUUID();
+  _pendingOAuthState = state;
+
   const url = new URL(GOOGLE_AUTH_ORIGIN);
   url.searchParams.set("client_id", getClientId());
   url.searchParams.set("redirect_uri", getRedirectUri());
-  url.searchParams.set("state", encodeURIComponent(JSON.stringify({ url: "/secrets" })));
+  url.searchParams.set("state", state);
   url.searchParams.set("prompt", "consent");
   url.searchParams.set("scope", SCOPES);
   url.searchParams.set("response_type", "code");
@@ -78,6 +94,14 @@ export function buildOAuthUrl(): string {
 
 export function extractCodeFromRedirectUrl(redirectUrl: string): string {
   const url = new URL(redirectUrl);
+
+  // Validate state parameter to prevent CSRF
+  const returnedState = url.searchParams.get("state");
+  if (_pendingOAuthState && returnedState !== _pendingOAuthState) {
+    throw new Error("OAuth state mismatch — possible CSRF attack. Please restart the login flow.");
+  }
+  _pendingOAuthState = null;
+
   const code = url.searchParams.get("code");
   if (!code) {
     throw new Error("No 'code' parameter found in the redirect URL");
@@ -145,6 +169,8 @@ async function saveTokens(tokens: AuthTokens): Promise<void> {
     encoding: "utf-8",
     mode: 0o600,
   });
+  // Enforce permissions even if the file already existed with lax permissions
+  await chmod(TOKEN_FILE, 0o600);
 }
 
 export async function loadTokens(): Promise<AuthTokens | null> {
