@@ -7,7 +7,7 @@ import type { AuthTokens } from "./types.js";
 const GOOGLE_AUTH_ORIGIN = "https://accounts.google.com/o/oauth2/v2/auth";
 const SCOPES = "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email";
 
-const TOKEN_DIR = join(homedir(), ".passwd-mcp");
+const TOKEN_DIR = join(homedir(), ".passwd");
 const TOKEN_FILE = join(TOKEN_DIR, "tokens.json");
 
 function requireHttps(url: string, label: string): void {
@@ -210,7 +210,7 @@ export async function loadTokens(): Promise<AuthTokens | null> {
 export async function getAccessToken(): Promise<string> {
   const tokens = await loadTokens();
   if (!tokens) {
-    throw new Error("Not authenticated. Run 'passwd login' or set PASSWD_ACCESS_TOKEN.");
+    throw new Error("Not authenticated. Use the passwd_login tool or set PASSWD_ACCESS_TOKEN.");
   }
   return tokens.access_token;
 }

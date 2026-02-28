@@ -14,7 +14,7 @@ export async function loginCommand(): Promise<void> {
     const redirectUrl = await rl.question("Paste the redirect URL here: ");
     const code = extractCodeFromRedirectUrl(redirectUrl.trim());
     await exchangeCode(code);
-    console.log("Authenticated successfully. Token saved to ~/.passwd-mcp/tokens.json");
+    console.log("Authenticated successfully. Token saved to ~/.passwd/tokens.json");
   } finally {
     rl.close();
   }

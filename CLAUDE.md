@@ -37,5 +37,5 @@ packages/
 
 ## Authentication
 
-Google OAuth2. Tokens cached at `~/.passwd-mcp/tokens.json`. Auto-refreshes on 401.
+Google OAuth2. Tokens cached at `~/.passwd/tokens.json`. Auto-refreshes on 401.
 Skip with `PASSWD_ACCESS_TOKEN` env var.

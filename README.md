@@ -136,7 +136,7 @@ Check [releases](https://github.com/pepuscz/passwd/releases) for new versions, t
 
 ## Authentication
 
-Google OAuth2. On first use, the `passwd_login` tool (MCP) or `passwd login` (CLI) will guide you through authentication. Tokens are cached at `~/.passwd-mcp/tokens.json` and auto-refresh.
+Google OAuth2. On first use, the `passwd_login` tool (MCP) or `passwd login` (CLI) will guide you through authentication. Tokens are cached at `~/.passwd/tokens.json` and auto-refresh.
 
 Set `PASSWD_ACCESS_TOKEN` env var to skip OAuth entirely.
 
