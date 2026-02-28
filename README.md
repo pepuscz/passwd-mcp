@@ -78,38 +78,78 @@ Add to your project's `.cursor/mcp.json` or `.windsurf/mcp.json`:
 
 ### OpenClaw
 
-Add a server entry to `~/.openclaw/openclaw.json` inside `plugins.entries.openclaw-mcp-adapter.config.servers`:
+Integrates as a [workspace skill](https://docs.openclaw.ai/tools/skills) using passwd-cli via `exec`. No plugins required.
 
-```json
-{
-  "name": "passwd-mcp",
-  "transport": "stdio",
-  "command": "npx",
-  "args": ["-y", "@pepuscz/passwd-mcp@1.0.3"],
-  "env": {
-    "PASSWD_ORIGIN": "https://your-company.passwd.team"
+**1. Set your deployment URL** in `~/.openclaw/.env`:
+
+```
+PASSWD_ORIGIN=https://your-company.passwd.team
+```
+
+**2. Authenticate** (one-time — tokens cached at `~/.passwd/tokens.json`):
+
+```bash
+npx -y @pepuscz/passwd-cli@1.0.3 login
+```
+
+**3. Create the skill** at `~/.openclaw/workspace/skills/passwd/SKILL.md`:
+
+````markdown
+---
+name: passwd
+description: "Team password manager (passwd.team). Search, create, update, delete, and share passwords, API keys, SSH keys, payment cards, TOTP codes, and secure notes."
+metadata:
+  {
+    "openclaw":
+      {
+        "emoji": "🔑",
+        "requires": { "env": ["PASSWD_ORIGIN"], "bins": ["npx"] },
+      },
   }
-}
-```
+---
 
-Restart the gateway (`launchctl bootout` / `bootstrap`). Then add instructions to your `AGENTS.md` so the model knows when to use the tools:
+# passwd
 
-```markdown
-## Password Manager (passwd.team)
+Manage team secrets via exec. Always use `--json` for structured output.
 
-You have access to the team password manager via MCP tools prefixed with `passwd_` and `list_`/`get_`/`create_`/`update_`/`delete_`/`share_`.
+CMD: `npx -y @pepuscz/passwd-cli@1.0.3`
 
-When the user asks about passwords, credentials, API keys, or secrets:
-1. Use `list_secrets` to search by name
-2. Use `get_secret` to retrieve full details including the password
-3. Use `get_totp_code` if they need a one-time code
+## Commands
 
-When the user wants to create or share a secret:
-1. Use `list_groups` or `list_contacts` to find the right group/user IDs
-2. Use `create_secret` or `update_secret` with the appropriate sharing fields
+Search:    CMD list -q "search term" --json
+Get:       CMD get SECRET_ID --json
+Password:  CMD get SECRET_ID --field password
+TOTP code: CMD totp SECRET_ID
+Create:    CMD create -t TYPE -n "Name" [-u user] [-p pass] [-w url] [--note text] [--tags t1 t2]
+Update:    CMD update SECRET_ID [-n name] [-p pass] [--note text] ...
+Delete:    CMD delete SECRET_ID -y
+Share:     CMD share SECRET_ID --json
+Unshare:   CMD share SECRET_ID --revoke
+Groups:    CMD groups --json
+Contacts:  CMD contacts --json
+Whoami:    CMD whoami --json
 
-Always confirm before deleting secrets.
-```
+Types: password, apiCredentials, databaseCredentials, sshKey, paymentCard, secureNote
+
+## Sharing
+
+To share a secret with a group or user, first look up the ID:
+1. CMD groups --json  OR  CMD contacts --json
+2. CMD create ... --group GROUP_ID:read,write  OR  --user USER_ID:read
+Permissions: read, write, autofillOnly, passkeyOnly
+
+## Run with injected secrets
+
+CMD exec --inject DB_PASS=SECRET_ID:password -- psql -h host -U user
+
+## Rules
+
+- ALWAYS confirm with user before deleting secrets
+- Use --json for all lookups so you get structured data
+- Run CMD create --help or CMD update --help for all options
+````
+
+**4. Restart the gateway** so the skill is discovered on the next session.
 
 ### CLI
 
@@ -132,7 +172,7 @@ Then use `node packages/passwd-mcp/dist/index.js` or `node packages/passwd-cli/d
 
 ## Upgrading
 
-Check [releases](https://github.com/pepuscz/passwd/releases) for new versions, then update the version number in your MCP config (e.g. `@1.0.3` → `@1.0.3`) and restart the client.
+Check [releases](https://github.com/pepuscz/passwd/releases) for new versions, then update the version number in your config — MCP config, OpenClaw SKILL.md, or CLI alias — and restart the client.
 
 ## Authentication
 
