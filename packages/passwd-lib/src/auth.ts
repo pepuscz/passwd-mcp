@@ -1,5 +1,5 @@
 import { readFile, writeFile, mkdir, chmod } from "node:fs/promises";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import type { AuthTokens } from "./types.js";
@@ -8,7 +8,12 @@ const GOOGLE_AUTH_ORIGIN = "https://accounts.google.com/o/oauth2/v2/auth";
 const SCOPES = "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email";
 
 const TOKEN_DIR = join(homedir(), ".passwd");
-const TOKEN_FILE = join(TOKEN_DIR, "tokens.json");
+
+function getTokenFile(): string {
+  const origin = getOrigin();
+  const hash = createHash("sha256").update(origin).digest("hex").slice(0, 12);
+  return join(TOKEN_DIR, `tokens-${hash}.json`);
+}
 
 function requireHttps(url: string, label: string): void {
   if (
@@ -183,13 +188,13 @@ export async function refreshToken(currentToken: string): Promise<AuthTokens> {
 }
 
 async function saveTokens(tokens: AuthTokens): Promise<void> {
+  const tokenFile = getTokenFile();
   await mkdir(TOKEN_DIR, { recursive: true, mode: 0o700 });
-  await writeFile(TOKEN_FILE, JSON.stringify(tokens, null, 2), {
+  await writeFile(tokenFile, JSON.stringify(tokens, null, 2), {
     encoding: "utf-8",
     mode: 0o600,
   });
-  // Enforce permissions even if the file already existed with lax permissions
-  await chmod(TOKEN_FILE, 0o600);
+  await chmod(tokenFile, 0o600);
 }
 
 export async function loadTokens(): Promise<AuthTokens | null> {
@@ -200,7 +205,7 @@ export async function loadTokens(): Promise<AuthTokens | null> {
   }
 
   try {
-    const content = await readFile(TOKEN_FILE, "utf-8");
+    const content = await readFile(getTokenFile(), "utf-8");
     return JSON.parse(content) as AuthTokens;
   } catch {
     return null;

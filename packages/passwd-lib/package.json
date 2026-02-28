@@ -1,6 +1,6 @@
 {
   "name": "@pepuscz/passwd-lib",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Core library for passwd.team — auth, API client, and types",
   "type": "module",
   "main": "dist/index.js",

@@ -31,7 +31,7 @@ import {
 
 const server = new McpServer({
   name: "passwd-mcp",
-  version: "1.0.2",
+  version: "1.0.3",
 });
 
 // --- Tool 1: passwd_login ---
