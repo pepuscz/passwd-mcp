@@ -46,7 +46,14 @@ server.tool(
         content: [
           {
             type: "text" as const,
-            text: `To log in, open this URL in your browser:\n\n${oauthUrl}\n\nAfter authenticating with Google, you will be redirected to a URL containing a code parameter.\n\nCopy the full redirect URL and call this tool again with it as the redirectUrl parameter.`,
+            text: [
+              "Open this link to log in (present it as a clickable markdown link to the user):",
+              "",
+              `[Log in with Google](${oauthUrl})`,
+              "",
+              "After authenticating, you will be redirected to a URL containing a code parameter.",
+              "Ask the user to copy the full redirect URL and paste it back here, then call this tool again with it as the redirectUrl parameter.",
+            ].join("\n"),
           },
         ],
       };
