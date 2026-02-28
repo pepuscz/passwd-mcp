@@ -140,6 +140,7 @@ Permissions: read, write, autofillOnly, passkeyOnly
 
 ## Run with injected secrets
 
+First find the secret ID with `CMD list`, then inject its field as an env var:
 CMD exec --inject DB_PASS=SECRET_ID:password -- psql -h host -U user
 
 ## Rules
