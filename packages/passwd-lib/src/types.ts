@@ -96,11 +96,13 @@ export interface ListSecretsResponse {
   totalCount?: number;
 }
 
-export interface TOTPResponse {
+export interface TOTPCode {
   code: string;
-  remaining: number;
-  [key: string]: unknown;
+  validityStart: number;
+  validityEnd: number;
 }
+
+export type TOTPResponse = TOTPCode[];
 
 export interface ShareResponse {
   shareId?: string;

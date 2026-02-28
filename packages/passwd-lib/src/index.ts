@@ -12,6 +12,7 @@ export type {
   Secret,
   SecretListItem,
   ListSecretsResponse,
+  TOTPCode,
   TOTPResponse,
   ShareResponse,
 } from "./types.js";

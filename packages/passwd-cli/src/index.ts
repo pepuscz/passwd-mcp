@@ -18,7 +18,8 @@ const program = new Command();
 program
   .name("passwd")
   .description("CLI for passwd.team password manager")
-  .version("1.0.0");
+  .version("1.0.0")
+  .enablePositionalOptions();
 
 program
   .command("login")
@@ -108,10 +109,10 @@ program
   .command("exec")
   .description("Run a command with secrets injected as environment variables")
   .option("--inject <mapping...>", "VAR=SECRET_ID:FIELD (repeatable)")
-  .allowUnknownOption(true)
-  .action((opts, cmd) => {
-    // Everything after -- becomes cmd.args
-    execCommand(cmd.args, opts).catch(die);
+  .argument("[args...]", "Command to execute (after --)")
+  .passThroughOptions()
+  .action((args, opts) => {
+    execCommand(args, opts).catch(die);
   });
 
 function die(err: unknown): void {
