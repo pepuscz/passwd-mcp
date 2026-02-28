@@ -15,7 +15,7 @@ Gives your AI assistant full access to your team's passwords, TOTP codes, secure
 
 ## Install
 
-No build step needed — `npx` downloads and runs the package automatically. Packages are hosted on [GitHub Packages](https://github.com/pepuscz/passwd-mcp/packages), which requires authentication even for installs.
+No build step needed — `npx` downloads and runs the package automatically. Packages are hosted on [GitHub Packages](https://github.com/pepuscz/passwd/packages), which requires authentication even for installs.
 
 **One-time setup:** create a GitHub [personal access token](https://github.com/settings/tokens) with `read:packages` scope, then add to `~/.npmrc`:
 
@@ -123,7 +123,7 @@ npx @pepuscz/passwd-cli --help
 ### Building from source
 
 ```bash
-git clone https://github.com/pepuscz/passwd-mcp.git
+git clone https://github.com/pepuscz/passwd.git
 cd passwd-mcp
 npm install && npm run build
 ```
