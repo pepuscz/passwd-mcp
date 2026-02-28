@@ -15,25 +15,25 @@ Gives your AI assistant full access to your team's passwords, TOTP codes, secure
 
 ## Install
 
-```bash
-git clone https://github.com/pepuscz/passwd-mcp.git
-cd passwd-mcp
-npm install
-npm run build
-```
+No build step needed — `npx` downloads and runs the package automatically. Packages are hosted on [GitHub Packages](https://github.com/pepuscz/passwd-mcp/packages), which requires authentication even for installs.
 
-This builds all three packages. The MCP server binary is at `packages/passwd-mcp/dist/index.js` and the CLI at `packages/passwd-cli/dist/index.js`.
+**One-time setup:** create a GitHub [personal access token](https://github.com/settings/tokens) with `read:packages` scope, then add to `~/.npmrc`:
+
+```
+//npm.pkg.github.com/:_authToken=ghp_YOUR_TOKEN_HERE
+@pepuscz:registry=https://npm.pkg.github.com
+```
 
 ## Setup
 
-In all examples below, replace `/path/to/passwd-mcp` with the absolute path to your clone and `https://your-company.passwd.team` with your passwd.team deployment URL.
+In all examples below, replace `https://your-company.passwd.team` with your passwd.team deployment URL.
 
 ### Claude Code
 
 ```bash
 claude mcp add passwd-mcp \
   -e PASSWD_ORIGIN=https://your-company.passwd.team \
-  -- node /path/to/passwd-mcp/packages/passwd-mcp/dist/index.js
+  -- npx -y @pepuscz/passwd-mcp
 ```
 
 Restart Claude Code and verify with `/mcp`.
@@ -46,8 +46,8 @@ Open **Settings → Developer → Edit Config** (`~/Library/Application Support/
 {
   "mcpServers": {
     "passwd-mcp": {
-      "command": "node",
-      "args": ["/path/to/passwd-mcp/packages/passwd-mcp/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "@pepuscz/passwd-mcp"],
       "env": {
         "PASSWD_ORIGIN": "https://your-company.passwd.team"
       }
@@ -66,8 +66,8 @@ Add to your project's `.cursor/mcp.json` or `.windsurf/mcp.json`:
 {
   "mcpServers": {
     "passwd-mcp": {
-      "command": "node",
-      "args": ["/path/to/passwd-mcp/packages/passwd-mcp/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "@pepuscz/passwd-mcp"],
       "env": {
         "PASSWD_ORIGIN": "https://your-company.passwd.team"
       }
@@ -84,8 +84,8 @@ Add a server entry to `~/.openclaw/openclaw.json` inside `plugins.entries.opencl
 {
   "name": "passwd-mcp",
   "transport": "stdio",
-  "command": "node",
-  "args": ["/path/to/passwd-mcp/packages/passwd-mcp/dist/index.js"],
+  "command": "npx",
+  "args": ["-y", "@pepuscz/passwd-mcp"],
   "env": {
     "PASSWD_ORIGIN": "https://your-company.passwd.team"
   }
@@ -114,11 +114,21 @@ Always confirm before deleting secrets.
 ### CLI
 
 ```bash
-# From the repo directory:
-PASSWD_ORIGIN=https://your-company.passwd.team npx passwd login
-PASSWD_ORIGIN=https://your-company.passwd.team npx passwd list
-PASSWD_ORIGIN=https://your-company.passwd.team npx passwd --help
+export PASSWD_ORIGIN=https://your-company.passwd.team
+npx @pepuscz/passwd-cli login
+npx @pepuscz/passwd-cli list
+npx @pepuscz/passwd-cli --help
 ```
+
+### Building from source
+
+```bash
+git clone https://github.com/pepuscz/passwd-mcp.git
+cd passwd-mcp
+npm install && npm run build
+```
+
+Then use `node packages/passwd-mcp/dist/index.js` or `node packages/passwd-cli/dist/index.js` in place of `npx` commands above.
 
 ## Authentication
 

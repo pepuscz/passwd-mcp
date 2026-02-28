@@ -1,4 +1,4 @@
-import { getTotpCode } from "passwd-lib";
+import { getTotpCode } from "@pepuscz/passwd-lib";
 import { formatJson } from "../util/format.js";
 
 export async function totpCommand(

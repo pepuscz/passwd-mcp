@@ -1,4 +1,4 @@
-import { listContacts } from "passwd-lib";
+import { listContacts } from "@pepuscz/passwd-lib";
 import { formatJson } from "../util/format.js";
 
 export async function contactsCommand(opts: { json?: boolean }): Promise<void> {

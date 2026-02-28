@@ -1,5 +1,5 @@
 {
-  "name": "passwd-cli",
+  "name": "@pepuscz/passwd-cli",
   "version": "1.0.0",
   "description": "CLI for passwd.team password manager",
   "type": "module",
@@ -21,7 +21,15 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "passwd-lib": "1.0.0",
+    "@pepuscz/passwd-lib": "1.0.0",
     "commander": "^13.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pepuscz/passwd-mcp.git",
+    "directory": "packages/passwd-cli"
+  },
+  "publishConfig": {
+    "@pepuscz:registry": "https://npm.pkg.github.com"
   }
 }

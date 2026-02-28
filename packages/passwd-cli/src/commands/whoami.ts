@@ -1,4 +1,4 @@
-import { getCurrentUser } from "passwd-lib";
+import { getCurrentUser } from "@pepuscz/passwd-lib";
 import { formatJson } from "../util/format.js";
 
 export async function whoamiCommand(opts: { json?: boolean }): Promise<void> {

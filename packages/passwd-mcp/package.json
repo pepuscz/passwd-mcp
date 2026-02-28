@@ -1,5 +1,5 @@
 {
-  "name": "passwd-mcp",
+  "name": "@pepuscz/passwd-mcp",
   "version": "1.0.0",
   "description": "MCP server for passwd.team password manager",
   "type": "module",
@@ -22,8 +22,16 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "passwd-lib": "1.0.0",
+    "@pepuscz/passwd-lib": "1.0.0",
     "@modelcontextprotocol/sdk": "^1.12.1",
     "zod": "^3.24.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pepuscz/passwd-mcp.git",
+    "directory": "packages/passwd-mcp"
+  },
+  "publishConfig": {
+    "@pepuscz:registry": "https://npm.pkg.github.com"
   }
 }

@@ -1,4 +1,4 @@
-import { getSecret } from "passwd-lib";
+import { getSecret } from "@pepuscz/passwd-lib";
 import { formatJson } from "../util/format.js";
 
 export async function getCommand(

@@ -20,7 +20,7 @@ import {
   listGroups,
   listContacts,
   getCurrentUser,
-} from "passwd-lib";
+} from "@pepuscz/passwd-lib";
 
 const server = new McpServer({
   name: "passwd-mcp",

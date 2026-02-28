@@ -1,6 +1,6 @@
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
-import { buildOAuthUrl, extractCodeFromRedirectUrl, exchangeCode } from "passwd-lib";
+import { buildOAuthUrl, extractCodeFromRedirectUrl, exchangeCode } from "@pepuscz/passwd-lib";
 
 export async function loginCommand(): Promise<void> {
   const oauthUrl = buildOAuthUrl();

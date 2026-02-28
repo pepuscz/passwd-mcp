@@ -1,5 +1,5 @@
 {
-  "name": "passwd-lib",
+  "name": "@pepuscz/passwd-lib",
   "version": "1.0.0",
   "description": "Core library for passwd.team — auth, API client, and types",
   "type": "module",
@@ -22,5 +22,13 @@
     "password-manager",
     "passwd-team"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pepuscz/passwd-mcp.git",
+    "directory": "packages/passwd-lib"
+  },
+  "publishConfig": {
+    "@pepuscz:registry": "https://npm.pkg.github.com"
+  }
 }
