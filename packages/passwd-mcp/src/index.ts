@@ -1,8 +1,15 @@
 #!/usr/bin/env node
 
+import { exec } from "node:child_process";
+import { platform } from "node:os";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+
+function openBrowser(url: string): void {
+  const cmd = platform() === "darwin" ? "open" : platform() === "win32" ? "start" : "xdg-open";
+  exec(`${cmd} ${JSON.stringify(url)}`, () => {});
+}
 
 import {
   buildOAuthUrl,
@@ -24,7 +31,7 @@ import {
 
 const server = new McpServer({
   name: "passwd-mcp",
-  version: "1.0.0",
+  version: "1.0.2",
 });
 
 // --- Tool 1: passwd_login ---
@@ -41,19 +48,13 @@ server.tool(
   },
   async ({ redirectUrl }) => {
     if (!redirectUrl) {
-      const oauthUrl = buildOAuthUrl();
+      const oauthUrl = await buildOAuthUrl();
+      openBrowser(oauthUrl);
       return {
         content: [
           {
             type: "text" as const,
-            text: [
-              "Open this link to log in (present it as a clickable markdown link to the user):",
-              "",
-              `[Log in with Google](${oauthUrl})`,
-              "",
-              "After authenticating, you will be redirected to a URL containing a code parameter.",
-              "Ask the user to copy the full redirect URL and paste it back here, then call this tool again with it as the redirectUrl parameter.",
-            ].join("\n"),
+            text: `A browser window has been opened for Google login.\n\nIf the browser did not open, copy this URL manually:\n${oauthUrl}\n\nAfter authenticating, you will be redirected. Copy the full redirect URL from your browser's address bar and call this tool again with it as the redirectUrl parameter.`,
           },
         ],
       };

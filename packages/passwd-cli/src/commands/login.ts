@@ -3,7 +3,7 @@ import { stdin, stdout } from "node:process";
 import { buildOAuthUrl, extractCodeFromRedirectUrl, exchangeCode } from "@pepuscz/passwd-lib";
 
 export async function loginCommand(): Promise<void> {
-  const oauthUrl = buildOAuthUrl();
+  const oauthUrl = await buildOAuthUrl();
 
   console.log("Open this URL in your browser to authenticate:\n");
   console.log(oauthUrl);

@@ -34,28 +34,47 @@ function getOrigin(): string {
   return normalized;
 }
 
-function getClientId(): string {
-  return process.env.PASSWD_CLIENT_ID || "953910800667-j781s3cmu5isaie59t01195i2ns6l3pj.apps.googleusercontent.com";
-}
-
 let _discoveredApiUrl: string | null = null;
+let _discoveredClientId: string | null = null;
+let _discoveryDone = false;
 
-async function discoverApiUrl(origin: string): Promise<string> {
+async function discoverFromOrigin(origin: string): Promise<void> {
+  if (_discoveryDone) return;
+  _discoveryDone = true;
+
   try {
-    const response = await fetch(origin, {
-      headers: { Accept: "text/html" },
-    });
+    const response = await fetch(origin, { headers: { Accept: "text/html" } });
     const html = await response.text();
-    const match = html.match(/<meta\s+name=["']app-api["']\s+content=["']([^"']+)["']/i);
-    if (match?.[1]) {
-      const discovered = match[1].replace(/\/+$/, "");
+
+    // Discover API URL from <meta name="app-api" content="...">
+    const apiMatch = html.match(/<meta\s+name=["']app-api["']\s+content=["']([^"']+)["']/i);
+    if (apiMatch?.[1]) {
+      const discovered = apiMatch[1].replace(/\/+$/, "");
       requireHttps(discovered, "Discovered API URL");
-      return discovered;
+      _discoveredApiUrl = discovered;
+    }
+
+    // Discover client ID from the JS bundle
+    const scriptMatch = html.match(/src=["']([^"']*index[^"']*\.js)["']/i);
+    if (scriptMatch?.[1]) {
+      const scriptUrl = new URL(scriptMatch[1], origin).href;
+      const jsResponse = await fetch(scriptUrl);
+      const js = await jsResponse.text();
+      const clientIdMatch = js.match(/(\d+-[a-z0-9]+\.apps\.googleusercontent\.com)/);
+      if (clientIdMatch?.[1]) {
+        _discoveredClientId = clientIdMatch[1];
+      }
     }
   } catch {
-    // Fall through to default
+    // Fall through to defaults/env vars
   }
-  return `${origin}/api`;
+}
+
+async function getClientId(): Promise<string> {
+  if (process.env.PASSWD_CLIENT_ID) return process.env.PASSWD_CLIENT_ID;
+  await discoverFromOrigin(getOrigin());
+  if (_discoveredClientId) return _discoveredClientId;
+  throw new Error("Could not discover Google OAuth client ID from the deployment. Set PASSWD_CLIENT_ID env var manually.");
 }
 
 export async function getApiUrl(): Promise<string> {
@@ -66,9 +85,8 @@ export async function getApiUrl(): Promise<string> {
     return normalized;
   }
 
-  if (_discoveredApiUrl) return _discoveredApiUrl;
-  _discoveredApiUrl = await discoverApiUrl(getOrigin());
-  return _discoveredApiUrl;
+  await discoverFromOrigin(getOrigin());
+  return _discoveredApiUrl || `${getOrigin()}/api`;
 }
 
 function getRedirectUri(): string {
@@ -77,12 +95,13 @@ function getRedirectUri(): string {
 
 let _pendingOAuthState: string | null = null;
 
-export function buildOAuthUrl(): string {
+export async function buildOAuthUrl(): Promise<string> {
   const state = randomUUID();
   _pendingOAuthState = state;
 
+  const clientId = await getClientId();
   const url = new URL(GOOGLE_AUTH_ORIGIN);
-  url.searchParams.set("client_id", getClientId());
+  url.searchParams.set("client_id", clientId);
   url.searchParams.set("redirect_uri", getRedirectUri());
   url.searchParams.set("state", state);
   url.searchParams.set("prompt", "consent");

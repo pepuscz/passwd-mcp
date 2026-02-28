@@ -33,7 +33,7 @@ In all examples below, replace `https://your-company.passwd.team` with your pass
 ```bash
 claude mcp add passwd-mcp \
   -e PASSWD_ORIGIN=https://your-company.passwd.team \
-  -- npx -y @pepuscz/passwd-mcp@1.0.1
+  -- npx -y @pepuscz/passwd-mcp@1.0.2
 ```
 
 Restart Claude Code and verify with `/mcp`.
@@ -47,7 +47,7 @@ Open **Settings → Developer → Edit Config** (`~/Library/Application Support/
   "mcpServers": {
     "passwd-mcp": {
       "command": "npx",
-      "args": ["-y", "@pepuscz/passwd-mcp@1.0.1"],
+      "args": ["-y", "@pepuscz/passwd-mcp@1.0.2"],
       "env": {
         "PASSWD_ORIGIN": "https://your-company.passwd.team"
       }
@@ -67,7 +67,7 @@ Add to your project's `.cursor/mcp.json` or `.windsurf/mcp.json`:
   "mcpServers": {
     "passwd-mcp": {
       "command": "npx",
-      "args": ["-y", "@pepuscz/passwd-mcp@1.0.1"],
+      "args": ["-y", "@pepuscz/passwd-mcp@1.0.2"],
       "env": {
         "PASSWD_ORIGIN": "https://your-company.passwd.team"
       }
@@ -85,7 +85,7 @@ Add a server entry to `~/.openclaw/openclaw.json` inside `plugins.entries.opencl
   "name": "passwd-mcp",
   "transport": "stdio",
   "command": "npx",
-  "args": ["-y", "@pepuscz/passwd-mcp@1.0.1"],
+  "args": ["-y", "@pepuscz/passwd-mcp@1.0.2"],
   "env": {
     "PASSWD_ORIGIN": "https://your-company.passwd.team"
   }
@@ -115,9 +115,9 @@ Always confirm before deleting secrets.
 
 ```bash
 export PASSWD_ORIGIN=https://your-company.passwd.team
-npx @pepuscz/passwd-cli@1.0.1 login
-npx @pepuscz/passwd-cli@1.0.1 list
-npx @pepuscz/passwd-cli@1.0.1 --help
+npx @pepuscz/passwd-cli@1.0.2 login
+npx @pepuscz/passwd-cli@1.0.2 list
+npx @pepuscz/passwd-cli@1.0.2 --help
 ```
 
 ### Building from source
@@ -132,7 +132,7 @@ Then use `node packages/passwd-mcp/dist/index.js` or `node packages/passwd-cli/d
 
 ## Upgrading
 
-Check [releases](https://github.com/pepuscz/passwd/releases) for new versions, then update the version number in your MCP config (e.g. `@1.0.1` → `@1.0.2`) and restart the client.
+Check [releases](https://github.com/pepuscz/passwd/releases) for new versions, then update the version number in your MCP config (e.g. `@1.0.2` → `@1.0.2`) and restart the client.
 
 ## Authentication
 
@@ -180,7 +180,7 @@ Set `PASSWD_ACCESS_TOKEN` env var to skip OAuth entirely.
 | `PASSWD_ORIGIN` | **Yes** | Your passwd.team URL (e.g. `https://your-company.passwd.team`) |
 | `PASSWD_ACCESS_TOKEN` | No | Skip OAuth — use a pre-existing Bearer token |
 | `PASSWD_API_URL` | No | API base URL override |
-| `PASSWD_CLIENT_ID` | No | Google OAuth client ID override |
+| `PASSWD_CLIENT_ID` | No | Google OAuth client ID override (auto-discovered from deployment) |
 
 ## Project structure
 
