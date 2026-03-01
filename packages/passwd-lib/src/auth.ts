@@ -119,9 +119,12 @@ export async function buildOAuthUrl(): Promise<string> {
 export function extractCodeFromRedirectUrl(redirectUrl: string): string {
   const url = new URL(redirectUrl);
 
-  // Validate state parameter to prevent CSRF
+  // Validate state parameter to prevent CSRF (login CSRF defense)
   const returnedState = url.searchParams.get("state");
-  if (_pendingOAuthState && returnedState !== _pendingOAuthState) {
+  if (!_pendingOAuthState) {
+    throw new Error("No pending OAuth state. Please call passwd_login (or `login`) first to start the login flow.");
+  }
+  if (returnedState !== _pendingOAuthState) {
     throw new Error("OAuth state mismatch — possible CSRF attack. Please restart the login flow.");
   }
   _pendingOAuthState = null;

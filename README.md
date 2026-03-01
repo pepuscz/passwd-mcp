@@ -33,7 +33,7 @@ In all examples below, replace `https://your-company.passwd.team` with your pass
 ```bash
 claude mcp add passwd-mcp \
   -e PASSWD_ORIGIN=https://your-company.passwd.team \
-  -- npx -y @pepuscz/passwd-mcp@1.0.4
+  -- npx -y @pepuscz/passwd-mcp@1.0.5
 ```
 
 Restart Claude Code and verify with `/mcp`.
@@ -47,7 +47,7 @@ Open **Settings → Developer → Edit Config** (`~/Library/Application Support/
   "mcpServers": {
     "passwd-mcp": {
       "command": "npx",
-      "args": ["-y", "@pepuscz/passwd-mcp@1.0.4"],
+      "args": ["-y", "@pepuscz/passwd-mcp@1.0.5"],
       "env": {
         "PASSWD_ORIGIN": "https://your-company.passwd.team"
       }
@@ -67,7 +67,7 @@ Add to your project's `.cursor/mcp.json` or `.windsurf/mcp.json`:
   "mcpServers": {
     "passwd-mcp": {
       "command": "npx",
-      "args": ["-y", "@pepuscz/passwd-mcp@1.0.4"],
+      "args": ["-y", "@pepuscz/passwd-mcp@1.0.5"],
       "env": {
         "PASSWD_ORIGIN": "https://your-company.passwd.team"
       }
@@ -89,7 +89,7 @@ PASSWD_ORIGIN=https://your-company.passwd.team
 **2. Authenticate** (one-time — tokens cached at `~/.passwd/tokens.json`):
 
 ```bash
-npx -y @pepuscz/passwd-cli@1.0.4 login
+npx -y @pepuscz/passwd-cli@1.0.5 login
 ```
 
 **3. Create the skill** at `~/.openclaw/workspace/skills/passwd/SKILL.md`:
@@ -112,7 +112,7 @@ metadata:
 
 Manage team secrets via exec. Always use `--json` for structured output.
 
-CMD: `npx -y @pepuscz/passwd-cli@1.0.4`
+CMD: `npx -y @pepuscz/passwd-cli@1.0.5`
 
 ## Commands
 
@@ -156,9 +156,9 @@ CMD exec --inject DB_PASS=SECRET_ID:password -- psql -h host -U user
 
 ```bash
 export PASSWD_ORIGIN=https://your-company.passwd.team
-npx @pepuscz/passwd-cli@1.0.4 login
-npx @pepuscz/passwd-cli@1.0.4 list
-npx @pepuscz/passwd-cli@1.0.4 --help
+npx @pepuscz/passwd-cli@1.0.5 login
+npx @pepuscz/passwd-cli@1.0.5 list
+npx @pepuscz/passwd-cli@1.0.5 --help
 ```
 
 ### Building from source
