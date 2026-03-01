@@ -161,6 +161,7 @@ CMD exec --inject DB_PASS=SECRET_ID:password -- psql -h host -U user
 
 - Never use tables or code blocks
 - Bold label, backtick value: **Username:** `value`
+- End credential output with 🔐
 - One field per line, skip empty fields
 - Lists: name and type only
 - TOTP: code and remaining seconds only
