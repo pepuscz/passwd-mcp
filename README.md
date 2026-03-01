@@ -156,6 +156,14 @@ CMD exec --inject DB_PASS=SECRET_ID:password -- psql -h host -U user
 - ALWAYS confirm with user before deleting secrets
 - Use --json for all lookups so you get structured data
 - Run CMD create --help or CMD update --help for all options
+
+## Display
+
+- Never use tables or code blocks
+- Bold label, backtick value: **Username:** `value`
+- One field per line, skip empty fields
+- Lists: name and type only
+- TOTP: code and remaining seconds only
 ````
 
 **4. Restart the gateway** so the skill is discovered on the next session.
