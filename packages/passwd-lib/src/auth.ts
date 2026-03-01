@@ -161,15 +161,21 @@ export async function exchangeCode(code: string): Promise<AuthTokens> {
   return data;
 }
 
-export async function refreshToken(currentToken: string): Promise<AuthTokens> {
+export async function refreshToken(tokens: AuthTokens): Promise<AuthTokens> {
+  if (!tokens.refresh_token) {
+    throw new Error("No refresh token available. Please re-authenticate.");
+  }
+
   const apiUrl = await getApiUrl();
   const url = `${apiUrl}/v2/oauth/refresh-token`;
 
   const response = await fetch(url, {
-    method: "GET",
+    method: "POST",
     headers: {
-      Authorization: `Bearer ${currentToken}`,
+      "Content-Type": "application/json",
+      "x-islocalhost": "false",
     },
+    body: JSON.stringify({ refreshToken: tokens.refresh_token }),
   });
 
   if (!response.ok) {
@@ -177,14 +183,19 @@ export async function refreshToken(currentToken: string): Promise<AuthTokens> {
     throw new Error(`Token refresh failed (${response.status}): ${text}`);
   }
 
-  const data = await response.json() as AuthTokens;
-  if (!data.access_token) {
-    throw new Error("No access_token in refresh response");
+  const data = await response.json() as { accessToken: string; expiration: number };
+  if (!data.accessToken) {
+    throw new Error("No accessToken in refresh response");
   }
 
-  data.saved_at = Date.now();
-  await saveTokens(data);
-  return data;
+  const refreshed: AuthTokens = {
+    access_token: data.accessToken,
+    refresh_token: tokens.refresh_token,
+    expiry_date: data.expiration,
+    saved_at: Date.now(),
+  };
+  await saveTokens(refreshed);
+  return refreshed;
 }
 
 async function saveTokens(tokens: AuthTokens): Promise<void> {
@@ -217,5 +228,16 @@ export async function getAccessToken(): Promise<string> {
   if (!tokens) {
     throw new Error("Not authenticated. Use the passwd_login tool or set PASSWD_ACCESS_TOKEN.");
   }
+
+  // Proactively refresh if token expires within 5 minutes
+  if (tokens.expiry_date && Date.now() > tokens.expiry_date - 5 * 60 * 1000) {
+    try {
+      const refreshed = await refreshToken(tokens);
+      return refreshed.access_token;
+    } catch {
+      return tokens.access_token; // let 401 retry handle it
+    }
+  }
+
   return tokens.access_token;
 }

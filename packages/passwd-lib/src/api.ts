@@ -1,4 +1,4 @@
-import { getApiUrl, getAccessToken, refreshToken } from "./auth.js";
+import { getApiUrl, getAccessToken, refreshToken, loadTokens } from "./auth.js";
 import type {
   Secret,
   SecretListItem,
@@ -30,7 +30,9 @@ async function authFetch(
   if (response.status === 401 && retry) {
     // Try refreshing the token
     try {
-      const newTokens = await refreshToken(token);
+      const tokens = await loadTokens();
+      if (!tokens) throw new Error("No tokens");
+      const newTokens = await refreshToken(tokens);
       const retryResponse = await fetch(url, {
         ...options,
         headers: {
