@@ -28,6 +28,14 @@ No build step needed — `npx` downloads and runs the package automatically. Pac
 
 In all examples below, replace `https://your-company.passwd.team` with your passwd.team deployment URL.
 
+| Client | Method | Section |
+|---|---|---|
+| Claude Code | MCP server | [Claude Code](#claude-code) |
+| Claude Desktop / Cowork | MCP server | [Claude Desktop / Cowork](#claude-desktop--cowork) |
+| Cursor / Windsurf | MCP server | [Cursor / Windsurf](#cursor--windsurf) |
+| OpenClaw | CLI workspace skill | [OpenClaw](#openclaw) |
+| Terminal / scripts / CI | CLI directly | [CLI](#cli) |
+
 ### Claude Code
 
 ```bash
