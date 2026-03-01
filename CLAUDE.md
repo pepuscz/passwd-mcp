@@ -37,5 +37,20 @@ packages/
 
 ## Authentication
 
-Google OAuth2. Tokens cached at `~/.passwd/tokens.json`. Auto-refreshes on 401.
+Google OAuth2. Tokens cached at `~/.passwd/tokens-<hash>.json`. Auto-refreshes on 401.
 Skip with `PASSWD_ACCESS_TOKEN` env var.
+
+## Release process
+
+1. Bump version in all places:
+   - `packages/passwd-lib/package.json` — version
+   - `packages/passwd-mcp/package.json` — version + `@pepuscz/passwd-lib` dep
+   - `packages/passwd-cli/package.json` — version + `@pepuscz/passwd-lib` dep
+   - `packages/passwd-mcp/src/index.ts` — MCP server version string
+   - `README.md` — all `@x.y.z` references (use replace_all)
+2. `npm install` — regenerate lockfile
+3. `npm run build` — verify it compiles
+4. Commit, push — GitHub Action (`.github/workflows/publish.yml`) auto-publishes all three packages to GitHub Packages on push to main
+5. `gh release create vX.Y.Z`
+
+Keep commit messages short for public repo.
