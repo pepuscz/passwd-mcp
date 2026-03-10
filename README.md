@@ -25,7 +25,7 @@ Pick your platform. In all examples below, replace `https://your-deployment.pass
 
 ### Claude Cowork
 
-Install the plugin. The agent can find and use credentials from your passwd.team vault — credentials are redacted in all responses and injected into commands via `exec --inject`.
+Install the plugin. The agent can find and use credentials from your passwd.team vault — raw values never enter the AI context.
 
 **1. Install the plugin** — in Cowork, go to **Plugins** and add this repository's `packages/passwd-plugin` directory, or copy it into your workspace plugins.
 
@@ -33,13 +33,13 @@ Install the plugin. The agent can find and use credentials from your passwd.team
 
 **3. Restart Cowork.**
 
-The MCP server is read-only — it never exposes raw credentials. Credential fields are replaced with `••••••••` at the code level. To use a credential, the agent calls `exec --inject` via the agent CLI (`@passwd/passwd-agent-cli`), which injects the value into a subprocess and masks stdout. The agent CLI has no command that outputs raw credential values — no `--field`, no `--no-masking` — so credential exposure is structurally prevented, not just policy-based. Cowork plugins share the same sandbox, so only install plugins you trust — the same principle applies to any tool that handles credentials.
+The MCP server is read-only (no create, update, delete, or share) and credential fields are replaced with `••••••••` at the code level. The agent CLI (`@passwd/passwd-agent-cli`) has no command that outputs raw credential values, so credential exposure is structurally prevented, not just policy-based. Cowork plugins share the same sandbox, so only install plugins you trust — the same principle applies to any tool that handles credentials.
 
 For multiple deployments, add separate MCP server entries in `.mcp.json` with different names and `PASSWD_ORIGIN` values.
 
 ### OpenClaw
 
-passwd integrates with [OpenClaw](https://openclaw.ai) as an [exec secrets provider](https://docs.openclaw.ai/gateway/secrets) — credentials are resolved at gateway startup and never reach the agent context. The agent CLI lets the agent find and use credentials via `exec --inject`.
+passwd integrates with [OpenClaw](https://openclaw.ai) as an [exec secrets provider](https://docs.openclaw.ai/gateway/secrets) — credentials are resolved at gateway startup and never reach the agent context.
 
 **1. Set your deployment URL** in `~/.openclaw/.env` and authenticate (one-time — tokens cached in `~/.passwd/`):
 
@@ -165,7 +165,7 @@ If you just want read-only access to your vault from any MCP-compatible client �
 }
 ```
 
-The MCP server is strictly read-only. It cannot create, update, delete, or share secrets. Credential fields are replaced with `••••••••` at the code level. To inject credentials into commands, pair it with the agent CLI (`@passwd/passwd-agent-cli`).
+The MCP server is read-only (no create, update, delete, or share) and credential fields are replaced with `••••••••` at the code level — the agent never sees raw values. To inject credentials into commands, pair it with the agent CLI (`@passwd/passwd-agent-cli`).
 
 ### CLI
 
@@ -210,7 +210,7 @@ Set `PASSWD_ACCESS_TOKEN` env var to skip OAuth entirely.
 
 ## MCP tools reference
 
-The MCP server (`@passwd/passwd-mcp`) is read-only and can be installed standalone — see [MCP server](#mcp-server). It helps the agent find the right secret and pull TOTP codes, but never exposes raw credentials.
+The MCP server (`@passwd/passwd-mcp`) can be installed standalone — see [MCP server](#mcp-server). It is read-only (no writes) and credential fields are always redacted.
 
 | Tool | Description |
 |---|---|
