@@ -71,6 +71,42 @@ export interface ListSecretsResult {
   totalCount: number;
 }
 
+/** Pure filtering + pagination logic, extracted for testability. */
+export function filterAndPaginate(
+  secrets: SecretListItem[],
+  params: ListSecretsParams = {},
+): ListSecretsResult {
+  let filtered = secrets;
+
+  // Filter by secret type
+  if (params.secretType) {
+    filtered = filtered.filter((s) => s.type === params.secretType);
+  }
+
+  // Filter by query (case-insensitive match on name, username, or web)
+  if (params.query) {
+    const q = params.query.toLowerCase();
+    filtered = filtered.filter(
+      (s) =>
+        s.name?.toLowerCase().includes(q) ||
+        s.username?.toLowerCase().includes(q) ||
+        s.web?.toLowerCase().includes(q)
+    );
+  }
+
+  const totalCount = filtered.length;
+
+  // Pagination
+  const offset = params.offset ?? 0;
+  if (params.limit !== undefined) {
+    filtered = filtered.slice(offset, offset + params.limit);
+  } else if (offset > 0) {
+    filtered = filtered.slice(offset);
+  }
+
+  return { secrets: filtered, totalCount };
+}
+
 export async function listSecrets(params: ListSecretsParams = {}): Promise<ListSecretsResult> {
   // The API does not support query parameters for filtering/pagination,
   // so we fetch all secrets and filter/paginate client-side.
@@ -87,33 +123,7 @@ export async function listSecrets(params: ListSecretsParams = {}): Promise<ListS
     secrets = [];
   }
 
-  // Client-side filtering by secret type
-  if (params.secretType) {
-    secrets = secrets.filter((s) => s.type === params.secretType);
-  }
-
-  // Client-side filtering by query (case-insensitive match on name, username, or web)
-  if (params.query) {
-    const q = params.query.toLowerCase();
-    secrets = secrets.filter(
-      (s) =>
-        s.name?.toLowerCase().includes(q) ||
-        s.username?.toLowerCase().includes(q) ||
-        s.web?.toLowerCase().includes(q)
-    );
-  }
-
-  const totalCount = secrets.length;
-
-  // Client-side pagination
-  const offset = params.offset ?? 0;
-  if (params.limit !== undefined) {
-    secrets = secrets.slice(offset, offset + params.limit);
-  } else if (offset > 0) {
-    secrets = secrets.slice(offset);
-  }
-
-  return { secrets, totalCount };
+  return filterAndPaginate(secrets, params);
 }
 
 export async function getSecret(id: string): Promise<Secret> {

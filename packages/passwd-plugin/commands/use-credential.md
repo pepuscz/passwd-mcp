@@ -18,7 +18,7 @@ Follow these steps:
 4. **Build the command** — ask the user what command they want to run with this credential. Build the `exec --inject` command:
 
    ```bash
-   npx -y @passwd/passwd-agent-cli@1.3.0 exec --inject ENV_VAR=SECRET_ID:field -- their-command
+   npx -y @passwd/passwd-agent-cli@1.3.1 exec --inject ENV_VAR=SECRET_ID:field -- their-command
    ```
 
    Choose a descriptive `ENV_VAR` name (e.g. `DB_PASS`, `API_KEY`, `SSH_KEY`).

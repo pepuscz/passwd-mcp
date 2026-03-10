@@ -42,6 +42,28 @@ packages/
 Google OAuth2. Tokens cached at `~/.passwd/tokens-<hash>.json`. Auto-refreshes on 401.
 Skip with `PASSWD_ACCESS_TOKEN` env var.
 
+## Tests
+
+```bash
+npm test                    # unit tests (no network)
+npm run test:integration    # integration tests (live API)
+npm run test:all            # both
+```
+
+**Unit tests** live in `packages/*/src/__tests__/*.test.ts` — pure logic, no network. Uses `node:test` + `node:assert/strict`.
+
+**Integration tests** live in `test/integration/*.test.ts` — hit a live passwd.team deployment. Auto-detect `PASSWD_ORIGIN` and test secret IDs from `~/.passwd/` tokens. Skip gracefully when no auth is available.
+
+### When to update tests
+
+- **New command or tool** → add integration test covering its happy path
+- **New option on existing command** → add integration test; if it's agent-cli, add security boundary test confirming dangerous options are absent
+- **Changed filtering/parsing/formatting logic** → update or add unit test
+- **New sensitive field** → add case to `redact.test.ts`
+- **Bug fix** → add regression test reproducing the bug
+
+Run `npm test` before every commit. Integration tests before release.
+
 ## Release process
 
 1. Bump version in all places:

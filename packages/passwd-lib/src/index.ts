@@ -38,6 +38,7 @@ export {
 export type { ListSecretsParams, ListSecretsResult } from "./api.js";
 
 export {
+  filterAndPaginate,
   listSecrets,
   getSecret,
   createSecret,

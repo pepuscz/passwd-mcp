@@ -9,7 +9,11 @@
   ],
   "scripts": {
     "build": "tsc -b",
-    "clean": "tsc -b --clean"
+    "clean": "tsc -b --clean",
+    "test": "npm run build && node --test packages/*/dist/__tests__/*.test.js",
+    "test:integration": "npm run build:integration && node --test test/integration/dist/*.test.js",
+    "test:all": "npm test && npm run test:integration",
+    "build:integration": "npm run build && npx tsc -p test/integration/tsconfig.json"
   },
   "devDependencies": {
     "@types/node": "^22.13.5",

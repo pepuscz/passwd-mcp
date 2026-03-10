@@ -44,7 +44,7 @@ passwd integrates with [OpenClaw](https://openclaw.ai) as an [exec secrets provi
 **1. Set your deployment URL** and authenticate:
 
 ```bash
-PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-agent-cli@1.3.0 login
+PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-agent-cli@1.3.1 login
 ```
 
 **2. Add the secrets provider** to `gateway.config.json5`:
@@ -56,7 +56,7 @@ PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-agent-cl
       passwd: {
         source: "exec",
         command: "/usr/local/bin/npx",          // absolute path to npx
-        args: ["-y", "@passwd/passwd-agent-cli@1.3.0", "resolve"],
+        args: ["-y", "@passwd/passwd-agent-cli@1.3.1", "resolve"],
         passEnv: ["PASSWD_ORIGIN", "HOME"],
         allowSymlinkCommand: true,              // needed if npx is a symlink (Homebrew)
         trustedDirs: ["/usr/local", "/opt/homebrew"],
@@ -82,7 +82,7 @@ PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-agent-cl
 }
 ```
 
-Store your API keys as secrets in passwd.team, then use their IDs in the `id` field. Run `npx @passwd/passwd-agent-cli@1.3.0 list` to find them.
+Store your API keys as secrets in passwd.team, then use their IDs in the `id` field. Run `npx @passwd/passwd-agent-cli@1.3.1 list` to find them.
 
 **4. Add the skill** at `~/.openclaw/workspace/skills/passwd/SKILL.md`:
 
@@ -104,7 +104,7 @@ metadata:
 
 Find and use credentials from your team's passwd.team vault. Always use `--json` for structured output.
 
-CMD: `npx -y @passwd/passwd-agent-cli@1.3.0`
+CMD: `npx -y @passwd/passwd-agent-cli@1.3.1`
 
 ## Commands
 
@@ -139,7 +139,7 @@ CMD envs --json
 
 **5. Restart the gateway** so the skill and provider are discovered.
 
-For multiple deployments, log in to each origin separately (`PASSWD_ORIGIN=... npx @passwd/passwd-agent-cli@1.3.0 login`). The agent can then switch with `--env` — see the Multi-environment section in the skill above.
+For multiple deployments, log in to each origin separately (`PASSWD_ORIGIN=... npx @passwd/passwd-agent-cli@1.3.1 login`). The agent can then switch with `--env` — see the Multi-environment section in the skill above.
 
 ### MCP server
 
@@ -150,7 +150,7 @@ If you just want read-only access to your vault from any MCP-compatible client �
   "mcpServers": {
     "passwd": {
       "command": "npx",
-      "args": ["-y", "@passwd/passwd-mcp@1.3.0"],
+      "args": ["-y", "@passwd/passwd-mcp@1.3.1"],
       "env": {
         "PASSWD_ORIGIN": "https://your-deployment.passwd.team"
       }
@@ -169,17 +169,17 @@ The full CLI (`@passwd/passwd-cli`) has complete access to your vault — includ
 
 ```bash
 export PASSWD_ORIGIN=https://your-deployment.passwd.team
-npx @passwd/passwd-cli@1.3.0 login
-npx @passwd/passwd-cli@1.3.0 list
-npx @passwd/passwd-cli@1.3.0 --help
+npx @passwd/passwd-cli@1.3.1 login
+npx @passwd/passwd-cli@1.3.1 list
+npx @passwd/passwd-cli@1.3.1 --help
 ```
 
 For multiple deployments, log in to each origin separately, then use `--env` to switch:
 
 ```bash
-PASSWD_ORIGIN=https://acme.passwd.team npx @passwd/passwd-cli@1.3.0 login
-PASSWD_ORIGIN=https://initech.passwd.team npx @passwd/passwd-cli@1.3.0 login
-npx @passwd/passwd-cli@1.3.0 list --env acme
+PASSWD_ORIGIN=https://acme.passwd.team npx @passwd/passwd-cli@1.3.1 login
+PASSWD_ORIGIN=https://initech.passwd.team npx @passwd/passwd-cli@1.3.1 login
+npx @passwd/passwd-cli@1.3.1 list --env acme
 ```
 
 ### Building from source
