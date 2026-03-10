@@ -4,7 +4,8 @@
   "workspaces": [
     "packages/passwd-lib",
     "packages/passwd-mcp",
-    "packages/passwd-cli"
+    "packages/passwd-cli",
+    "packages/passwd-agent-cli"
   ],
   "scripts": {
     "build": "tsc -b",

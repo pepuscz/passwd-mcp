@@ -31,3 +31,7 @@ jobs:
       - run: npm publish --workspace packages/passwd-cli || true
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - run: npm publish --workspace packages/passwd-agent-cli || true
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -16,6 +16,7 @@ Pick your platform. In all examples below, replace `https://your-deployment.pass
 |---|---|
 | Claude Cowork | [Claude Cowork](#claude-cowork) |
 | OpenClaw | [OpenClaw](#openclaw) |
+| Any MCP client | [MCP server](#mcp-server) |
 | Terminal / scripts / CI | [CLI](#cli) |
 
 ### Claude Cowork
@@ -28,18 +29,18 @@ Install the plugin. The agent can find and use credentials from your passwd.team
 
 **3. Restart Cowork.**
 
-The MCP server is read-only — it never exposes raw credentials. Credential fields are replaced with `••••••••` at the code level. To use a credential, the agent calls `exec --inject` via CLI, which injects the value into a subprocess and masks stdout. This is defense against accidental exposure, not a cryptographic boundary. Cowork plugins share the same sandbox, so only install plugins you trust — the same principle applies to any tool that handles credentials.
+The MCP server is read-only — it never exposes raw credentials. Credential fields are replaced with `••••••••` at the code level. To use a credential, the agent calls `exec --inject` via the agent CLI (`@passwd/passwd-agent-cli`), which injects the value into a subprocess and masks stdout. The agent CLI has no command that outputs raw credential values — no `--field`, no `--no-masking` — so credential exposure is structurally prevented, not just policy-based. Cowork plugins share the same sandbox, so only install plugins you trust — the same principle applies to any tool that handles credentials.
 
 For multiple deployments, add separate MCP server entries in `.mcp.json` with different names and `PASSWD_ORIGIN` values.
 
 ### OpenClaw
 
-passwd integrates with [OpenClaw](https://openclaw.ai) as an [exec secrets provider](https://docs.openclaw.ai/gateway/secrets) — credentials are resolved at gateway startup and never reach the agent context. A CLI skill lets the agent find and use credentials via `exec --inject`.
+passwd integrates with [OpenClaw](https://openclaw.ai) as an [exec secrets provider](https://docs.openclaw.ai/gateway/secrets) — credentials are resolved at gateway startup and never reach the agent context. The agent CLI lets the agent find and use credentials via `exec --inject`.
 
 **1. Set your deployment URL** in `~/.openclaw/.env` and authenticate (one-time — tokens cached in `~/.passwd/`):
 
 ```bash
-PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-cli@1.3.0 login
+PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-agent-cli@1.3.0 login
 ```
 
 **2. Add the secrets provider** to `gateway.config.json5`:
@@ -51,7 +52,7 @@ PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-cli@1.3.
       passwd: {
         source: "exec",
         command: "/usr/local/bin/npx",          // absolute path to npx
-        args: ["-y", "@passwd/passwd-cli@1.3.0", "resolve"],
+        args: ["-y", "@passwd/passwd-agent-cli@1.3.0", "resolve"],
         passEnv: ["PASSWD_ORIGIN", "HOME"],
         allowSymlinkCommand: true,              // needed if npx is a symlink (Homebrew)
         trustedDirs: ["/usr/local", "/opt/homebrew"],
@@ -77,14 +78,14 @@ PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-cli@1.3.
 }
 ```
 
-Store your API keys as secrets in passwd.team, then use their IDs in the `id` field. Run `npx @passwd/passwd-cli@1.3.0 list` to find them.
+Store your API keys as secrets in passwd.team, then use their IDs in the `id` field. Run `npx @passwd/passwd-agent-cli@1.3.0 list` to find them.
 
 **4. Add the skill** at `~/.openclaw/workspace/skills/passwd/SKILL.md`:
 
 ````markdown
 ---
 name: passwd
-description: "Manage team secrets — search, create, update, delete, share. Credentials are never exposed in chat."
+description: "Find and use team credentials safely. Credentials are never exposed in chat."
 metadata:
   {
     "openclaw":
@@ -97,46 +98,30 @@ metadata:
 
 # passwd
 
-Manage team secrets via exec. Always use `--json` for structured output.
+Find and use credentials from your team's passwd.team vault. Always use `--json` for structured output.
 
-CMD: `npx -y @passwd/passwd-cli@1.3.0`
+CMD: `npx -y @passwd/passwd-agent-cli@1.3.0`
 
 ## Commands
 
 Search:    CMD list -q "search term" --json
 Info:      CMD get SECRET_ID --json
 TOTP code: CMD totp SECRET_ID
-Create:    CMD create -t TYPE -n "Name" [-u user] [-p pass] [-w url] [--note text] [--tags t1 t2]
-Update:    CMD update SECRET_ID [-n name] [-p pass] [--note text] ...
-Delete:    CMD delete SECRET_ID -y
-Share:     CMD share SECRET_ID --json
-Unshare:   CMD share SECRET_ID --revoke
-Groups:    CMD groups --json
-Contacts:  CMD contacts --json
 Whoami:    CMD whoami --json
 Envs:      CMD envs --json
-
-Types: password, apiCredentials, databaseCredentials, sshKey, paymentCard, secureNote
 
 ## Use credentials
 
 NEVER read credentials directly. Inject them as env vars:
 CMD exec --inject DB_PASS=SECRET_ID:password -- psql -h host -U user
 The secret value goes directly to the subprocess — the agent never sees it.
-Secret values in stdout are automatically masked: `<concealed by passwd>`
-
-## Sharing
-
-To share a secret with a group or user, first look up the ID:
-1. CMD groups --json  OR  CMD contacts --json
-2. CMD create ... --group GROUP_ID:read,write  OR  --user USER_ID:read
-Permissions: read, write, autofillOnly, passkeyOnly
+Secret values in stdout are always masked: `<concealed by passwd>`
 
 ## Rules
 
-- NEVER use --field to read credential values — use exec --inject instead
-- Use --json for all lookups
-- ALWAYS confirm with user before deleting secrets
+- NEVER attempt to extract raw credential values — they are redacted for security
+- Use `exec --inject` to pass credentials to commands
+- Manage secrets (create, update, delete, share) in the passwd.team web interface, not in chat
 
 ## Multi-environment
 
@@ -156,9 +141,33 @@ CMD envs --json
 
 **5. Restart the gateway** so the skill and provider are discovered.
 
-For multiple deployments, log in to each origin separately (`PASSWD_ORIGIN=... npx @passwd/passwd-cli@1.3.0 login`). The agent can then switch with `--env` — see the Multi-environment section in the skill above.
+For multiple deployments, log in to each origin separately (`PASSWD_ORIGIN=... npx @passwd/passwd-agent-cli@1.3.0 login`). The agent can then switch with `--env` — see the Multi-environment section in the skill above.
+
+### MCP server
+
+If you just want read-only access to your vault from any MCP-compatible client — browse secrets, view details (credentials redacted), pull TOTP codes — install the MCP server standalone:
+
+```json
+{
+  "mcpServers": {
+    "passwd": {
+      "command": "npx",
+      "args": ["-y", "@passwd/passwd-mcp@1.3.0"],
+      "env": {
+        "PASSWD_ORIGIN": "https://your-deployment.passwd.team"
+      }
+    }
+  }
+}
+```
+
+The MCP server is strictly read-only. It cannot create, update, delete, or share secrets. Credential fields are replaced with `••••••••` at the code level. To inject credentials into commands, pair it with the agent CLI (`@passwd/passwd-agent-cli`).
 
 ### CLI
+
+The full CLI (`@passwd/passwd-cli`) has complete access to your vault — including raw credential values via `--field` and unmasked output via `--no-masking`. Use it for terminal sessions, scripts, and CI pipelines where you control the environment.
+
+> **For AI agent integrations, use `@passwd/passwd-agent-cli` instead** — it has the same useful commands but no way to output raw credentials.
 
 ```bash
 export PASSWD_ORIGIN=https://your-deployment.passwd.team
@@ -197,7 +206,7 @@ Set `PASSWD_ACCESS_TOKEN` env var to skip OAuth entirely.
 
 ## MCP tools reference
 
-The MCP server is read-only — it helps the agent find the right secret and pull TOTP codes, but never exposes raw credentials.
+The MCP server (`@passwd/passwd-mcp`) is read-only and can be installed standalone — see [MCP server](#mcp-server). It helps the agent find the right secret and pull TOTP codes, but never exposes raw credentials.
 
 | Tool | Description |
 |---|---|
@@ -207,7 +216,24 @@ The MCP server is read-only — it helps the agent find the right secret and pul
 | `get_totp_code` | Get current TOTP code (ephemeral 30s codes) |
 | `get_current_user` | Get authenticated user profile |
 
+## Agent CLI commands reference
+
+The agent CLI (`@passwd/passwd-agent-cli`, binary `passwd-agent`) is a hardened subset of the full CLI — no command outputs raw credential values. Used by Cowork and OpenClaw integrations.
+
+| Command | Description |
+|---|---|
+| `passwd-agent login` | Authenticate with Google OAuth |
+| `passwd-agent whoami` | Show current user |
+| `passwd-agent list` | List/search secrets (`-q`, `-t`, `--json`) |
+| `passwd-agent get <id>` | Get a secret (always redacted, no `--field`) |
+| `passwd-agent totp <id>` | Get current TOTP code |
+| `passwd-agent exec` | Run command with secrets as env vars (`--inject VAR=ID:FIELD`, stdout always masked) |
+| `passwd-agent envs` | List known environments (`--json`) |
+| `passwd-agent --env <name>` | Global flag: target a specific environment by name substring |
+
 ## CLI commands reference
+
+The full CLI (`@passwd/passwd-cli`, binary `passwd`) has complete vault access including raw credential output. For AI agent integrations, use the agent CLI above.
 
 | Command | Description |
 |---|---|
@@ -239,10 +265,11 @@ The MCP server is read-only — it helps the agent find the right secret and pul
 
 ```
 packages/
-  passwd-lib/      Core library (types, auth, API — zero dependencies)
-  passwd-mcp/      MCP server (depends on passwd-lib)
-  passwd-cli/      CLI (depends on passwd-lib)
-  passwd-plugin/   Cowork plugin (MCP config + agent-blind skill)
+  passwd-lib/        Core library (types, auth, API — zero dependencies)
+  passwd-mcp/        MCP server (depends on passwd-lib)
+  passwd-cli/        Full CLI (depends on passwd-lib)
+  passwd-agent-cli/  Agent-safe CLI — no command exposes raw credentials (depends on passwd-lib)
+  passwd-plugin/     Cowork plugin (MCP config + agent-blind skill)
 ```
 
 ## License

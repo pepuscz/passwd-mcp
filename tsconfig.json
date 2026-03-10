@@ -3,6 +3,7 @@
   "references": [
     { "path": "packages/passwd-lib" },
     { "path": "packages/passwd-mcp" },
-    { "path": "packages/passwd-cli" }
+    { "path": "packages/passwd-cli" },
+    { "path": "packages/passwd-agent-cli" }
   ]
 }
