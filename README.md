@@ -14,13 +14,9 @@ AI-assisted team password management — search, create, share secrets through n
 - **Attach files** to secrets (certificates, configs, etc.)
 - **List groups & contacts** in your workspace for easy sharing
 
-## Install
-
-No build step needed — `npx` downloads and runs the package automatically from [npm](https://www.npmjs.com/org/passwd).
-
 ## Setup
 
-In all examples below, replace `https://your-deployment.passwd.team` with your passwd.team deployment URL (default is `https://app.passwd.team`).
+Pick your platform. In all examples below, replace `https://your-deployment.passwd.team` with your passwd.team deployment URL (default is `https://app.passwd.team`).
 
 | Client | Method | Section |
 |---|---|---|
@@ -200,7 +196,7 @@ Then use `node packages/passwd-mcp/dist/index.js` or `node packages/passwd-cli/d
 
 ## Upgrading
 
-Check [releases](https://github.com/pepuscz/passwd/releases) for new versions, then update the version number in your config — MCP config, OpenClaw SKILL.md, or CLI alias — and restart the client.
+Check [releases](https://github.com/pepuscz/passwd/releases) for new versions, then update the version number in your config — Cowork plugin `.mcp.json`, OpenClaw gateway config / SKILL.md, or CLI alias — and restart.
 
 ## Authentication
 
@@ -215,8 +211,8 @@ Set `PASSWD_ACCESS_TOKEN` env var to skip OAuth entirely.
 | `passwd_login` | Google OAuth login flow |
 | `list_secrets` | Search/list secrets (filter by query, type; paginate) |
 | `get_secret` | Get secret details (credentials redacted) |
-| `create_secret` | Create a secret (all types, with sharing, files, visibleToAll) |
-| `update_secret` | Update a secret |
+| `create_secret` | Create a secret (response redacted; all types, sharing, files) |
+| `update_secret` | Update a secret (response redacted) |
 | `delete_secret` | Delete a secret |
 | `get_totp_code` | Get current TOTP code for a secret |
 | `share_secret` | Enable or revoke a share link |
