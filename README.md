@@ -158,7 +158,7 @@ CMD exec --inject DB_PASS=SECRET_ID:password -- psql -h host -U user
 ## Multi-environment
 
 Use --env NAME with any command to target a specific passwd.team deployment:
-CMD list -q "search" --json --env prod
+CMD list -q "search" --json --env acme
 CMD envs --json
 
 ## Display
