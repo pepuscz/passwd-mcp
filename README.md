@@ -6,7 +6,7 @@
 
 - **Use credentials safely** — agent finds the right secret, injects it into a command via `exec --inject`; raw values never enter AI context
 - **Pull one-time passwords** — agent gets live TOTP codes from passwd to complete 2FA flows
-- **Manage secrets** — search, create, update, delete, share passwords, API keys, SSH keys, and more
+- **Browse secrets** — find the right credential by name, URL, or tags
 
 ## Setup
 
@@ -28,11 +28,13 @@ Install the plugin. The agent can find and use credentials from your passwd.team
 
 **3. Restart Cowork.**
 
+The MCP server is read-only — it never exposes raw credentials. Credential fields are replaced with `••••••••` at the code level. To use a credential, the agent calls `exec --inject` via CLI, which injects the value into a subprocess and masks stdout. This is defense against accidental exposure, not a cryptographic boundary. Cowork plugins share the same sandbox, so only install plugins you trust — the same principle applies to any tool that handles credentials.
+
 For multiple deployments, add separate MCP server entries in `.mcp.json` with different names and `PASSWD_ORIGIN` values.
 
 ### OpenClaw
 
-passwd integrates with [OpenClaw](https://openclaw.ai) as an [exec secrets provider](https://docs.openclaw.ai/gateway/secrets) — credentials are resolved at gateway startup and never reach the agent context. A CLI skill lets the agent find and use credentials via `exec --inject` and manage secrets.
+passwd integrates with [OpenClaw](https://openclaw.ai) as an [exec secrets provider](https://docs.openclaw.ai/gateway/secrets) — credentials are resolved at gateway startup and never reach the agent context. A CLI skill lets the agent find and use credentials via `exec --inject`.
 
 **1. Set your deployment URL** in `~/.openclaw/.env` and authenticate (one-time — tokens cached in `~/.passwd/`):
 
@@ -195,19 +197,15 @@ Set `PASSWD_ACCESS_TOKEN` env var to skip OAuth entirely.
 
 ## MCP tools reference
 
+The MCP server is read-only — it helps the agent find the right secret and pull TOTP codes, but never exposes raw credentials.
+
 | Tool | Description |
 |---|---|
 | `passwd_login` | Google OAuth login flow |
 | `list_secrets` | Search/list secrets (filter by query, type; paginate) |
 | `get_secret` | Get secret details (credentials redacted) |
-| `create_secret` | Create a secret (response redacted; all types, sharing, files) |
-| `update_secret` | Update a secret (response redacted) |
-| `delete_secret` | Delete a secret |
-| `get_totp_code` | Get current TOTP code for a secret |
-| `share_secret` | Enable or revoke a share link |
+| `get_totp_code` | Get current TOTP code (ephemeral 30s codes) |
 | `get_current_user` | Get authenticated user profile |
-| `list_groups` | List workspace groups (IDs for sharing) |
-| `list_contacts` | List workspace contacts (IDs for sharing) |
 
 ## CLI commands reference
 

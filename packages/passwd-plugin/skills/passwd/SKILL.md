@@ -1,24 +1,17 @@
 # passwd
 
-Manage team secrets via MCP tools and CLI.
+Find and use credentials from your team's passwd.team vault. Credentials are never exposed in chat.
 
-## MCP tools (management)
-
-Use the MCP tools for all read/write operations:
+## MCP tools
 
 - `list_secrets` — search and browse secrets (filter by query, type; paginate)
 - `get_secret` — view secret details (credentials are **redacted** — you will see `••••••••`)
-- `create_secret` — create new secrets (all types, sharing, files)
-- `update_secret` — update existing secrets
-- `delete_secret` — delete a secret (always confirm with user first)
-- `get_totp_code` — get current TOTP code
-- `share_secret` — enable or revoke share links
-- `list_groups` / `list_contacts` — find IDs for sharing
+- `get_totp_code` — get current TOTP code for 2FA flows
 - `get_current_user` — check who is authenticated
 
 ## Use credentials (exec --inject)
 
-Credential fields (password, keys, etc.) are always redacted in MCP responses. This is intentional — the agent should never see raw secrets.
+Credential fields (password, keys, etc.) are always redacted in MCP responses. This is intentional — the agent never sees raw secrets.
 
 To **use** a credential (e.g. connect to a database, call an API), inject it as an environment variable:
 
@@ -45,5 +38,4 @@ The secret value goes directly to the subprocess environment — the agent never
 - NEVER attempt to extract raw credential values — they are redacted for security
 - Use `exec --inject` to pass credentials to commands
 - Use `/passwd:use-credential` for guided credential injection
-- Always confirm with the user before deleting secrets
-- Use `--json` with CLI commands for structured output
+- Manage secrets (create, update, delete, share) in the passwd.team web interface, not in chat
