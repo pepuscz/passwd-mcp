@@ -3,7 +3,7 @@ import { getSecret } from "@passwd/passwd-lib";
 
 export async function execCommand(
   args: string[],
-  opts: { inject?: string[]; noMasking?: boolean },
+  opts: { inject?: string[]; masking?: boolean },
 ): Promise<void> {
   if (!args.length) {
     console.error("Usage: passwd exec --inject VAR=SECRET_ID:FIELD -- command [args...]");
@@ -52,10 +52,10 @@ export async function execCommand(
   const [cmd, ...cmdArgs] = args;
   const child = spawn(cmd, cmdArgs, {
     env,
-    stdio: opts.noMasking ? "inherit" : ["inherit", "pipe", "pipe"],
+    stdio: opts.masking === false ? "inherit" : ["inherit", "pipe", "pipe"],
   });
 
-  if (!opts.noMasking) {
+  if (opts.masking !== false) {
     const mask = (chunk: Buffer): Buffer => {
       let str = chunk.toString();
       for (const v of secretValues) {
