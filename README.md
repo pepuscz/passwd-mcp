@@ -4,9 +4,13 @@
 
 ## What it can do
 
-- **Use credentials safely** — agent finds the right secret, injects it into a command via `exec --inject`; raw values never enter AI context
-- **Pull one-time passwords** — agent gets live TOTP codes from passwd to complete 2FA flows
-- **Browse secrets** — find the right credential by name, URL, or tags
+Three tools for different scopes — pick what fits your setup.
+
+| Tool | Can do | Cannot do |
+|---|---|---|
+| **MCP server** | Browse secrets, view details (redacted), pull TOTP codes | Credential output, writes, exec |
+| **Agent CLI** | All of MCP + inject credentials via `exec`, stdout masked | Raw credential output, writes |
+| **Full CLI** | Everything — raw values, create, update, delete, share | — |
 
 ## Setup
 
