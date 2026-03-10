@@ -27,7 +27,7 @@ In all examples below, replace `https://your-deployment.passwd.team` with your p
 | Claude Desktop / Cowork | MCP server | [Claude Desktop / Cowork](#claude-desktop--cowork) |
 | Cursor / Windsurf | MCP server | [Cursor / Windsurf](#cursor--windsurf) |
 | OpenClaw | CLI workspace skill | [OpenClaw](#openclaw) |
-| OpenClaw (secrets provider) | Exec provider for SecretRefs | [Secrets provider](#secrets-provider-optional) |
+| OpenClaw (secrets provider) | Exec provider for SecretRefs | [Secrets provider](#secrets-provider) |
 | Terminal / scripts / CI | CLI directly | [CLI](#cli) |
 
 ### Claude Code
@@ -175,22 +175,52 @@ CMD envs --json
 
 For multiple deployments, log in to each origin separately (`PASSWD_ORIGIN=... passwd login`). The agent can then switch with `--env` — see the Multi-environment section in the skill above.
 
-### Secrets provider (optional)
+### Secrets provider
 
-Use passwd as an [exec secrets provider](https://docs.openclaw.ai/gateway/secrets) to inject passwd.team credentials into model provider configs without exposing them in plaintext.
+Use passwd as an [exec secrets provider](https://docs.openclaw.ai/gateway/secrets) so OpenClaw can resolve API keys from passwd.team at startup — no plaintext secrets in config.
+
+**1. Authenticate** (same as above if already done):
 
 ```bash
-openclaw secrets configure
-# Select provider type: exec
-# Command: /path/to/npx (or node packages/passwd-cli/dist/index.js)
-# Args: -y @passwd/passwd-cli@1.1.0 resolve
-# passEnv: PASSWD_ORIGIN, HOME
+PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-cli@1.1.0 login
 ```
 
-SecretRef format — the id is `SECRET_ID:field` (field defaults to `password`):
-```json
-"apiKey": {"source": "exec", "provider": "passwd", "id": "abc123:password"}
+**2. Add the provider** to `gateway.config.json5`:
+
+```json5
+{
+  secrets: {
+    providers: {
+      passwd: {
+        source: "exec",
+        command: "/usr/local/bin/npx",          // absolute path to npx
+        args: ["-y", "@passwd/passwd-cli@1.1.0", "resolve"],
+        passEnv: ["PASSWD_ORIGIN", "HOME"],
+        allowSymlinkCommand: true,              // needed if npx is a symlink (Homebrew)
+        trustedDirs: ["/usr/local", "/opt/homebrew"],
+      },
+    },
+  },
+}
 ```
+
+**3. Reference secrets** in model providers using SecretRefs — the `id` is `SECRET_ID:field` (field defaults to `password`):
+
+```json5
+{
+  models: {
+    providers: {
+      openai: {
+        baseUrl: "https://api.openai.com/v1",
+        models: [{ id: "gpt-4o", name: "gpt-4o" }],
+        apiKey: { source: "exec", provider: "passwd", id: "abc123:password" },
+      },
+    },
+  },
+}
+```
+
+Store your API keys as secrets in passwd.team, then use their IDs in the `id` field. Run `npx @passwd/passwd-cli@1.1.0 list` to find them.
 
 ### CLI
 
