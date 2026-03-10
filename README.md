@@ -19,7 +19,7 @@ No build step needed — `npx` downloads and runs the package automatically from
 
 ## Setup
 
-In all examples below, replace `https://your-company.passwd.team` with your passwd.team deployment URL.
+In all examples below, replace `https://your-deployment.passwd.team` with your passwd.team deployment URL (default is `https://app.passwd.team`).
 
 | Client | Method | Section |
 |---|---|---|
@@ -34,11 +34,11 @@ In all examples below, replace `https://your-company.passwd.team` with your pass
 
 ```bash
 claude mcp add passwd-mcp \
-  -e PASSWD_ORIGIN=https://your-company.passwd.team \
+  -e PASSWD_ORIGIN=https://your-deployment.passwd.team \
   -- npx -y @passwd/passwd-mcp@1.1.0
 ```
 
-Restart Claude Code and verify with `/mcp`.
+Restart Claude Code and verify with `/mcp`. For multiple deployments, add separate MCP servers with different names and `PASSWD_ORIGIN` values.
 
 ### Claude Desktop / Cowork
 
@@ -51,14 +51,14 @@ Open **Settings → Developer → Edit Config** (`~/Library/Application Support/
       "command": "npx",
       "args": ["-y", "@passwd/passwd-mcp@1.1.0"],
       "env": {
-        "PASSWD_ORIGIN": "https://your-company.passwd.team"
+        "PASSWD_ORIGIN": "https://your-deployment.passwd.team"
       }
     }
   }
 }
 ```
 
-Restart Claude Desktop.
+Restart Claude Desktop. For multiple deployments, add separate entries (e.g. `passwd-prod`, `passwd-staging`) with different `PASSWD_ORIGIN` values.
 
 ### Cursor / Windsurf
 
@@ -71,12 +71,14 @@ Add to your project's `.cursor/mcp.json` or `.windsurf/mcp.json`:
       "command": "npx",
       "args": ["-y", "@passwd/passwd-mcp@1.1.0"],
       "env": {
-        "PASSWD_ORIGIN": "https://your-company.passwd.team"
+        "PASSWD_ORIGIN": "https://your-deployment.passwd.team"
       }
     }
   }
 }
 ```
+
+For multiple deployments, add separate entries with different `PASSWD_ORIGIN` values.
 
 ### OpenClaw
 
@@ -85,7 +87,7 @@ Integrates as a [workspace skill](https://docs.openclaw.ai/tools/skills) using p
 **1. Set your deployment URL** in `~/.openclaw/.env`:
 
 ```
-PASSWD_ORIGIN=https://your-company.passwd.team
+PASSWD_ORIGIN=https://your-deployment.passwd.team
 ```
 
 **2. Authenticate** (one-time — tokens cached in `~/.passwd/`):
@@ -171,6 +173,8 @@ CMD envs --json
 
 **4. Restart the gateway** so the skill is discovered on the next session.
 
+For multiple deployments, log in to each origin separately (`PASSWD_ORIGIN=... passwd login`). The agent can then switch with `--env` — see the Multi-environment section in the skill above.
+
 ### Secrets provider (optional)
 
 Use passwd as an [exec secrets provider](https://docs.openclaw.ai/gateway/secrets) to inject passwd.team credentials into model provider configs without exposing them in plaintext.
@@ -191,10 +195,18 @@ SecretRef format — the id is `SECRET_ID:field` (field defaults to `password`):
 ### CLI
 
 ```bash
-export PASSWD_ORIGIN=https://your-company.passwd.team
+export PASSWD_ORIGIN=https://your-deployment.passwd.team
 npx @passwd/passwd-cli@1.1.0 login
 npx @passwd/passwd-cli@1.1.0 list
 npx @passwd/passwd-cli@1.1.0 --help
+```
+
+For multiple deployments, log in to each origin separately, then use `--env` to switch:
+
+```bash
+PASSWD_ORIGIN=https://prod.passwd.team npx @passwd/passwd-cli@1.1.0 login
+PASSWD_ORIGIN=https://staging.passwd.team npx @passwd/passwd-cli@1.1.0 login
+npx @passwd/passwd-cli@1.1.0 list --env prod
 ```
 
 ### Building from source
@@ -256,7 +268,7 @@ Set `PASSWD_ACCESS_TOKEN` env var to skip OAuth entirely.
 
 | Variable | Required | Description |
 |---|---|---|
-| `PASSWD_ORIGIN` | **Yes** | Your passwd.team URL (e.g. `https://your-company.passwd.team`) |
+| `PASSWD_ORIGIN` | **Yes** | Your passwd.team URL (default `https://app.passwd.team`) |
 | `PASSWD_ACCESS_TOKEN` | No | Skip OAuth — use a pre-existing Bearer token |
 | `PASSWD_API_URL` | No | API base URL override |
 | `PASSWD_CLIENT_ID` | No | Google OAuth client ID override (auto-discovered from deployment) |
