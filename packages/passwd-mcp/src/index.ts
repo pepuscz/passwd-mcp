@@ -31,11 +31,12 @@ import {
   listGroups,
   listContacts,
   getCurrentUser,
+  redactSecret,
 } from "@passwd/passwd-lib";
 
 const server = new McpServer({
   name: "passwd-mcp",
-  version: "1.2.0",
+  version: "1.3.0",
 });
 
 // --- Tool 1: passwd_login ---
@@ -128,15 +129,16 @@ server.tool(
 // --- Tool 3: get_secret ---
 server.tool(
   "get_secret",
-  "Get full details of a specific secret including password, notes, and TOTP status.",
+  "Get secret details. Sensitive fields (password, keys, etc.) are redacted — use passwd CLI exec --inject to use credentials without exposing them.",
   {
     id: z.string().describe("The secret ID"),
   },
   async ({ id }) => {
     try {
       const secret = await getSecret(id);
+      const redacted = redactSecret(secret);
       // Strip favicon (large base64 image) to save tokens
-      const { favicon, ...rest } = secret as unknown as Record<string, unknown>;
+      const { favicon, ...rest } = redacted as unknown as Record<string, unknown>;
       return {
         content: [
           {
@@ -198,11 +200,12 @@ server.tool(
   async (params) => {
     try {
       const secret = await createSecret(params);
+      const redacted = redactSecret(secret);
       return {
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify(secret, null, 2),
+            text: JSON.stringify(redacted, null, 2),
           },
         ],
       };
@@ -242,11 +245,12 @@ server.tool(
   async ({ id, ...updates }) => {
     try {
       const secret = await updateSecret(id, updates);
+      const redacted = redactSecret(secret);
       return {
         content: [
           {
             type: "text" as const,
-            text: JSON.stringify(secret, null, 2),
+            text: JSON.stringify(redacted, null, 2),
           },
         ],
       };

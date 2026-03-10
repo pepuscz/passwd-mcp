@@ -3,7 +3,7 @@ dist/
 *.tsbuildinfo
 *.js.map
 .env
-.mcp.json
+/.mcp.json
 .claude/
 SECURITY.md
 *.tgz

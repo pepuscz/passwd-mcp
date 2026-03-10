@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "passwd-mcp": {
+      "command": "npx",
+      "args": ["-y", "@passwd/passwd-mcp@1.3.0"],
+      "env": {
+        "PASSWD_ORIGIN": "https://your-deployment.passwd.team"
+      }
+    }
+  }
+}

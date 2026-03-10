@@ -2,11 +2,12 @@
 
 MCP server + CLI for [passwd.team](https://passwd.team) password manager.
 
-Gives your AI assistant access to your team's secrets — manage passwords, TOTP codes, secure notes, and file attachments through natural language.
+AI-assisted team password management — search, create, share secrets through natural language. Credentials are redacted from AI context and injected safely via `exec --inject`.
 
 ## What it can do
 
-- **Search & retrieve** passwords, API keys, SSH keys, payment cards, secure notes
+- **Search & browse** passwords, API keys, SSH keys, payment cards, secure notes
+- **Use credentials safely** via `exec --inject` (agent-blind — secrets never enter AI context)
 - **Create & update** secrets with all field types
 - **Generate TOTP codes** on demand
 - **Share secrets** with groups or individual users, with granular permissions (read, write, autofillOnly, passkeyOnly)
@@ -23,61 +24,26 @@ In all examples below, replace `https://your-deployment.passwd.team` with your p
 
 | Client | Method | Section |
 |---|---|---|
-| Claude Code | MCP server | [Claude Code](#claude-code) |
-| Claude Desktop / Cowork | MCP server | [Claude Desktop / Cowork](#claude-desktop--cowork) |
-| Cursor / Windsurf | MCP server | [Cursor / Windsurf](#cursor--windsurf) |
+| Claude Cowork | Plugin (MCP + agent-blind skill) | [Claude Cowork](#claude-cowork) |
 | OpenClaw | Exec secrets provider + CLI skill | [OpenClaw](#openclaw) |
 | Terminal / scripts / CI | CLI directly | [CLI](#cli) |
 
-### Claude Code
+### Claude Cowork
 
-```bash
-claude mcp add passwd-mcp \
-  -e PASSWD_ORIGIN=https://your-deployment.passwd.team \
-  -- npx -y @passwd/passwd-mcp@1.2.0
-```
+Install the passwd plugin to get redacted MCP tools, an agent-blind skill, and the `/passwd:use-credential` command.
 
-Restart Claude Code and verify with `/mcp`. For multiple deployments, add separate MCP servers with different names and `PASSWD_ORIGIN` values.
+**1. Install the plugin** — in Cowork, go to **Plugins** and add this repository's `packages/passwd-plugin` directory, or copy it into your workspace plugins.
 
-### Claude Desktop / Cowork
+**2. Set your deployment URL** — edit `packages/passwd-plugin/.mcp.json` and replace `https://your-deployment.passwd.team` with your passwd.team URL (default is `https://app.passwd.team`).
 
-Open **Settings → Developer → Edit Config** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+**3. Restart Cowork** so the plugin is discovered.
 
-```json
-{
-  "mcpServers": {
-    "passwd-mcp": {
-      "command": "npx",
-      "args": ["-y", "@passwd/passwd-mcp@1.2.0"],
-      "env": {
-        "PASSWD_ORIGIN": "https://your-deployment.passwd.team"
-      }
-    }
-  }
-}
-```
+The plugin provides:
+- **MCP tools** — all passwd operations (search, create, update, delete, share, TOTP). Credential fields are automatically redacted (`••••••••`).
+- **Skill** — teaches the agent to use `exec --inject` for credential injection instead of reading raw values.
+- **`/passwd:use-credential`** — guided flow to inject a credential into any command.
 
-Restart Claude Desktop. For multiple deployments, add separate entries (e.g. `passwd-acme`, `passwd-initech`) with different `PASSWD_ORIGIN` values.
-
-### Cursor / Windsurf
-
-Add to your project's `.cursor/mcp.json` or `.windsurf/mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "passwd-mcp": {
-      "command": "npx",
-      "args": ["-y", "@passwd/passwd-mcp@1.2.0"],
-      "env": {
-        "PASSWD_ORIGIN": "https://your-deployment.passwd.team"
-      }
-    }
-  }
-}
-```
-
-For multiple deployments, add separate entries with different `PASSWD_ORIGIN` values.
+For multiple deployments, add separate MCP server entries in `.mcp.json` with different names and `PASSWD_ORIGIN` values.
 
 ### OpenClaw
 
@@ -86,7 +52,7 @@ passwd integrates with [OpenClaw](https://openclaw.ai) as an [exec secrets provi
 **1. Set your deployment URL** in `~/.openclaw/.env` and authenticate (one-time — tokens cached in `~/.passwd/`):
 
 ```bash
-PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-cli@1.2.0 login
+PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-cli@1.3.0 login
 ```
 
 **2. Add the secrets provider** to `gateway.config.json5`:
@@ -98,7 +64,7 @@ PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-cli@1.2.
       passwd: {
         source: "exec",
         command: "/usr/local/bin/npx",          // absolute path to npx
-        args: ["-y", "@passwd/passwd-cli@1.2.0", "resolve"],
+        args: ["-y", "@passwd/passwd-cli@1.3.0", "resolve"],
         passEnv: ["PASSWD_ORIGIN", "HOME"],
         allowSymlinkCommand: true,              // needed if npx is a symlink (Homebrew)
         trustedDirs: ["/usr/local", "/opt/homebrew"],
@@ -124,7 +90,7 @@ PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-cli@1.2.
 }
 ```
 
-Store your API keys as secrets in passwd.team, then use their IDs in the `id` field. Run `npx @passwd/passwd-cli@1.2.0 list` to find them.
+Store your API keys as secrets in passwd.team, then use their IDs in the `id` field. Run `npx @passwd/passwd-cli@1.3.0 list` to find them.
 
 **4. (Optional) Add management skill** at `~/.openclaw/workspace/skills/passwd/SKILL.md`:
 
@@ -146,7 +112,7 @@ metadata:
 
 Manage team secrets via exec. Always use `--json` for structured output.
 
-CMD: `npx -y @passwd/passwd-cli@1.2.0`
+CMD: `npx -y @passwd/passwd-cli@1.3.0`
 
 ## Commands
 
@@ -203,23 +169,23 @@ CMD envs --json
 
 **5. Restart the gateway** so the skill and provider are discovered.
 
-For multiple deployments, log in to each origin separately (`PASSWD_ORIGIN=... npx @passwd/passwd-cli@1.2.0 login`). The agent can then switch with `--env` — see the Multi-environment section in the skill above.
+For multiple deployments, log in to each origin separately (`PASSWD_ORIGIN=... npx @passwd/passwd-cli@1.3.0 login`). The agent can then switch with `--env` — see the Multi-environment section in the skill above.
 
 ### CLI
 
 ```bash
 export PASSWD_ORIGIN=https://your-deployment.passwd.team
-npx @passwd/passwd-cli@1.2.0 login
-npx @passwd/passwd-cli@1.2.0 list
-npx @passwd/passwd-cli@1.2.0 --help
+npx @passwd/passwd-cli@1.3.0 login
+npx @passwd/passwd-cli@1.3.0 list
+npx @passwd/passwd-cli@1.3.0 --help
 ```
 
 For multiple deployments, log in to each origin separately, then use `--env` to switch:
 
 ```bash
-PASSWD_ORIGIN=https://acme.passwd.team npx @passwd/passwd-cli@1.2.0 login
-PASSWD_ORIGIN=https://initech.passwd.team npx @passwd/passwd-cli@1.2.0 login
-npx @passwd/passwd-cli@1.2.0 list --env acme
+PASSWD_ORIGIN=https://acme.passwd.team npx @passwd/passwd-cli@1.3.0 login
+PASSWD_ORIGIN=https://initech.passwd.team npx @passwd/passwd-cli@1.3.0 login
+npx @passwd/passwd-cli@1.3.0 list --env acme
 ```
 
 ### Building from source
@@ -248,7 +214,7 @@ Set `PASSWD_ACCESS_TOKEN` env var to skip OAuth entirely.
 |---|---|
 | `passwd_login` | Google OAuth login flow |
 | `list_secrets` | Search/list secrets (filter by query, type; paginate) |
-| `get_secret` | Get full secret details including password |
+| `get_secret` | Get secret details (credentials redacted) |
 | `create_secret` | Create a secret (all types, with sharing, files, visibleToAll) |
 | `update_secret` | Update a secret |
 | `delete_secret` | Delete a secret |
@@ -265,7 +231,7 @@ Set `PASSWD_ACCESS_TOKEN` env var to skip OAuth entirely.
 | `passwd login` | Authenticate with Google OAuth |
 | `passwd whoami` | Show current user |
 | `passwd list` | List/search secrets (`-q`, `-t`, `--json`) |
-| `passwd get <id>` | Get a secret (`--field` for raw value) |
+| `passwd get <id>` | Get a secret (redacted by default; `--field` for raw value) |
 | `passwd create` | Create a secret (`-t`, `-n`, `--group`, `--user`, `--file`, `--visible-to-all`) |
 | `passwd update <id>` | Update a secret (`--group`, `--user`, `--file`, `--remove-file`, `--visible-to-all`) |
 | `passwd delete <id>` | Delete a secret (`-y` to skip confirmation) |
@@ -274,7 +240,7 @@ Set `PASSWD_ACCESS_TOKEN` env var to skip OAuth entirely.
 | `passwd groups` | List workspace groups |
 | `passwd contacts` | List workspace contacts |
 | `passwd envs` | List known environments (`--json`) |
-| `passwd exec` | Run command with secrets as env vars (`--inject VAR=ID:FIELD`) |
+| `passwd exec` | Run command with secrets as env vars (`--inject VAR=ID:FIELD`, stdout masking) |
 | `passwd --env <name>` | Global flag: target a specific environment by name substring |
 
 ## Configuration
@@ -290,9 +256,10 @@ Set `PASSWD_ACCESS_TOKEN` env var to skip OAuth entirely.
 
 ```
 packages/
-  passwd-lib/   Core library (types, auth, API — zero dependencies)
-  passwd-mcp/   MCP server (depends on passwd-lib)
-  passwd-cli/   CLI (depends on passwd-lib)
+  passwd-lib/      Core library (types, auth, API — zero dependencies)
+  passwd-mcp/      MCP server (depends on passwd-lib)
+  passwd-cli/      CLI (depends on passwd-lib)
+  passwd-plugin/   Cowork plugin (MCP config + agent-blind skill)
 ```
 
 ## License
