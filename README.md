@@ -41,7 +41,7 @@ For multiple deployments, add separate MCP server entries in `.mcp.json` with di
 
 passwd integrates with [OpenClaw](https://openclaw.ai) as an [exec secrets provider](https://docs.openclaw.ai/gateway/secrets) — credentials are resolved at gateway startup and never reach the agent context.
 
-**1. Set your deployment URL** in `~/.openclaw/.env` and authenticate (one-time — tokens cached in `~/.passwd/`):
+**1. Set your deployment URL** and authenticate:
 
 ```bash
 PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-agent-cli@1.3.0 login
