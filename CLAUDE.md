@@ -20,7 +20,7 @@ npm run clean        # tsc -b --clean
 ```
 packages/
   passwd-lib/src/        types.ts, auth.ts, api.ts, index.ts (barrel)
-  passwd-mcp/src/        index.ts (MCP server with 9 tools)
+  passwd-mcp/src/        index.ts (MCP server with 5 read-only tools)
   passwd-cli/src/        index.ts (commander), commands/*.ts, util/format.ts
   passwd-agent-cli/src/  index.ts (commander, 8 safe commands), commands/*.ts, util/
 ```

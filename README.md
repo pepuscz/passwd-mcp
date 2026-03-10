@@ -89,7 +89,7 @@ Store your API keys as secrets in passwd.team, then use their IDs in the `id` fi
 ````markdown
 ---
 name: passwd
-description: "Find and use team credentials safely. Credentials are never exposed in chat."
+description: "Find and use team credentials safely."
 metadata:
   {
     "openclaw":
@@ -116,16 +116,10 @@ Envs:      CMD envs --json
 
 ## Use credentials
 
-NEVER read credentials directly. Inject them as env vars:
+Inject credentials as env vars:
 CMD exec --inject DB_PASS=SECRET_ID:password -- psql -h host -U user
-The secret value goes directly to the subprocess — the agent never sees it.
-Secret values in stdout are always masked: `<concealed by passwd>`
 
-## Rules
-
-- NEVER attempt to extract raw credential values — they are redacted for security
-- Use `exec --inject` to pass credentials to commands
-- Manage secrets (create, update, delete, share) in the passwd.team web interface, not in chat
+Multiple secrets: add more `--inject VAR=ID:field` flags.
 
 ## Multi-environment
 
@@ -253,7 +247,7 @@ The full CLI (`@passwd/passwd-cli`, binary `passwd`) has complete vault access i
 | `passwd groups` | List workspace groups |
 | `passwd contacts` | List workspace contacts |
 | `passwd envs` | List known environments (`--json`) |
-| `passwd exec` | Run command with secrets as env vars (`--inject VAR=ID:FIELD`, stdout masking) |
+| `passwd exec` | Run command with secrets as env vars (`--inject VAR=ID:FIELD`, `--no-masking` to disable stdout masking) |
 | `passwd --env <name>` | Global flag: target a specific environment by name substring |
 
 ## Configuration
