@@ -1,8 +1,8 @@
 # passwd
 
-MCP server + CLI for [passwd.team](https://passwd.team) password manager.
+Cowork plugin + CLI for [passwd.team](https://passwd.team) password manager.
 
-AI-assisted team password management — search, create, share secrets through natural language. Credentials are redacted from AI context and injected safely via `exec --inject`.
+AI-assisted team password management — search, create, share secrets through natural language. Credentials are always redacted from AI context and injected safely via `exec --inject`.
 
 ## What it can do
 
