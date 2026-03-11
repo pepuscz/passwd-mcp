@@ -1,10 +1,14 @@
 {
   "name": "passwd",
-  "description": "passwd.team for AI agents — browse credentials, generate TOTP codes, and inject secrets into commands without exposing raw values.",
+  "owner": {
+    "name": "passwd.team"
+  },
   "plugins": [
     {
       "name": "passwd",
-      "source": "./packages/passwd-plugin"
+      "source": "./packages/passwd-plugin",
+      "description": "Team password manager — agent-safe MCP tools with redacted credentials, plus a skill for secure credential injection via exec --inject.",
+      "version": "1.4.4"
     }
   ]
 }
