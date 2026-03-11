@@ -80,6 +80,6 @@ Run `npm test` before every commit. Integration tests before release.
 4. `npm test` — run unit tests
 5. `npm run test:integration` — run integration tests locally (requires `~/.passwd/` tokens)
 6. Commit, push — GitHub Action (`.github/workflows/publish.yml`) auto-publishes all four packages to npm on push to main
-7. `gh release create vX.Y.Z`
+7. `gh release create vX.Y.Z --title "vX.Y.Z — Short label"` — title must be ≤25 chars so it fits the GitHub sidebar without truncation. Format: `vX.Y.Z — Two-three words`. Don't describe implementation details in the title or notes.
 
-Keep commit messages short for public repo.
+Keep commit messages short for public repo. Don't expose security implementation details in public commits/releases.
