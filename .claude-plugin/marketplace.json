@@ -7,8 +7,7 @@
     {
       "name": "passwd",
       "source": "./packages/passwd-plugin",
-      "description": "Team password manager — agent-safe MCP tools with redacted credentials, plus a skill for secure credential injection via exec --inject.",
-      "version": "1.4.5"
+      "description": "Team password manager — agent-safe MCP tools with redacted credentials, plus a skill for secure credential injection via exec --inject."
     }
   ]
 }

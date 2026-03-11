@@ -74,6 +74,10 @@ Run `npm test` before every commit. Integration tests before release.
    - `packages/passwd-mcp/src/index.ts` — MCP server version string
    - `packages/passwd-cli/src/index.ts` — CLI version string
    - `packages/passwd-agent-cli/src/index.ts` — CLI version string
+   - `packages/passwd-plugin/.claude-plugin/plugin.json` — Cowork plugin version (single source of truth; NOT in marketplace.json)
+   - `packages/passwd-plugin/.mcp.json` — `@passwd/passwd-mcp@X.Y.Z` version
+   - `packages/passwd-plugin/skills/passwd/SKILL.md` — `@passwd/passwd-agent-cli@X.Y.Z` version
+   - `packages/passwd-plugin/commands/use-credential.md` — `@passwd/passwd-agent-cli@X.Y.Z` version
    - `README.md` — all `@x.y.z` references (use replace_all)
 2. `npm install` — regenerate lockfile
 3. `npm run build` — verify it compiles
