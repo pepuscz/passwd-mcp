@@ -1,0 +1,10 @@
+{
+  "name": "passwd",
+  "description": "passwd.team for AI agents — browse credentials, generate TOTP codes, and inject secrets into commands without exposing raw values.",
+  "plugins": [
+    {
+      "name": "passwd",
+      "source": "./packages/passwd-plugin"
+    }
+  ]
+}

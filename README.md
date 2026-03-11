@@ -28,7 +28,7 @@ Pick your platform. In all examples below, replace `https://your-deployment.pass
 
 The plugin bundles the MCP server (browse vault, TOTP codes) and an agent CLI skill (`exec --inject`) — your agent gets both.
 
-**1. Install the plugin** — in Cowork, go to **Plugins** and add [`packages/passwd-plugin`](https://github.com/pepuscz/passwd/tree/main/packages/passwd-plugin) from this repository.
+**1. Install the plugin** — in Cowork, go to **Plugins → Personal → +**, and add `https://github.com/pepuscz/passwd` as a marketplace.
 
 **2. Set your deployment URL** — edit `packages/passwd-plugin/.mcp.json` and replace `https://your-deployment.passwd.team` with your passwd.team URL (default is `https://app.passwd.team`).
 
