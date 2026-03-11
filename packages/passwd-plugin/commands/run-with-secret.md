@@ -1,4 +1,7 @@
-# /passwd:run-with-secret
+---
+name: run-with-secret
+description: Run a command with a credential from your vault injected securely
+---
 
 Inject a credential into a command without exposing it.
 

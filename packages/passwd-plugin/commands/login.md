@@ -1,4 +1,7 @@
-# /passwd:login
+---
+name: login
+description: Connect to your passwd.team vault (run this first after installing the plugin)
+---
 
 Connect to your passwd.team vault. This is an interactive conversation — guide the user step by step. Ask one question at a time and wait for their response.
 
