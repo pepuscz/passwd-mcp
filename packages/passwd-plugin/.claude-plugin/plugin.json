@@ -1,7 +1,7 @@
 {
   "name": "passwd",
-  "version": "1.4.5",
-  "description": "Team password manager — agent-safe MCP tools with redacted credentials, plus a skill for secure credential injection via exec --inject.",
+  "version": "1.4.6",
+  "description": "passwd.team for AI agents — browse credentials, generate TOTP codes, and inject secrets into commands without seeing raw values. Run /passwd:login after installing.",
   "author": {
     "name": "passwd.team"
   }

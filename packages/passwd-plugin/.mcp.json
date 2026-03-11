@@ -4,7 +4,7 @@
       "command": "npx",
       "args": ["-y", "@passwd/passwd-mcp@1.4.4"],
       "env": {
-        "PASSWD_ORIGIN": "https://your-deployment.passwd.team"
+        "PASSWD_ORIGIN": "https://app.passwd.team"
       }
     }
   }

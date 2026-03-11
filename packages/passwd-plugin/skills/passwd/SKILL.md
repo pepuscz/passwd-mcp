@@ -19,4 +19,4 @@ npx -y @passwd/passwd-agent-cli@1.4.4 exec --inject DB_PASS=SECRET_ID:password -
 
 Multiple secrets: add more `--inject VAR=ID:field` flags.
 
-Use `/passwd:use-credential` for guided credential injection.
+Use `/passwd:run-with-secret` for guided credential injection.

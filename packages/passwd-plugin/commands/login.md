@@ -1,29 +1,32 @@
 ---
 name: login
-description: Connect to your passwd.team vault (run this first after installing the plugin)
+description: Connect to your passwd.team vault (run this after installing the plugin)
 ---
 
-Connect to your passwd.team vault. This is an interactive conversation — guide the user step by step. Ask one question at a time and wait for their response.
+Connect the user to their passwd.team vault. This is an interactive conversation — ask one question at a time and wait for the response.
 
-## Step 1: Get the deployment URL
+Important: The product is called **passwd.team** (not "password"). Always refer to it as passwd.team.
 
-Ask the user: "What is your passwd.team URL? For example `https://acme.passwd.team`. If you use the default deployment, it's `https://app.passwd.team`."
+## Step 1: Default or custom deployment?
 
-Wait for their answer. Once they reply with a URL (e.g. `https://acme.passwd.team`):
+Ask: "Are you using the default passwd.team deployment (`app.passwd.team`), or does your team have a custom deployment URL?"
 
-Check if the current `PASSWD_ORIGIN` in the connector matches what they said. If it doesn't (e.g. still the placeholder `https://your-deployment.passwd.team`), tell them:
+- **If default** — continue to step 2 immediately, no configuration needed.
+- **If custom** — ask for their URL (e.g. `https://acme.passwd.team`), then tell them:
 
-"I need you to update one setting — go to **Plugins → Passwd → Connectors → passwd-mcp → Edit**, change `PASSWD_ORIGIN` to `{their URL}`, save, and restart this conversation. Then run `/passwd:login` again."
+"Update the connector with your URL:
+1. Go to **Plugins → Passwd → Connectors → passwd-mcp → Edit**
+2. Change `PASSWD_ORIGIN` to `{their URL}`
+3. Save and restart this conversation
+4. Run `/passwd:login` again"
 
-Stop here — don't continue until they restart.
-
-If `PASSWD_ORIGIN` already matches, continue to step 2.
+Stop here — do not continue until they restart.
 
 ## Step 2: Login
 
-Tell the user: "Great, let me start the login. A browser window will open for Google sign-in."
+Tell the user: "Let me connect to your passwd.team vault. A browser window will open for Google sign-in."
 
-Call the `passwd_login` tool (without redirectUrl) to start the OAuth flow.
+Call the `passwd_login` tool without parameters to start the OAuth flow.
 
 Then tell the user: "After signing in with Google, you'll be redirected to a page. Copy the full URL from your browser's address bar and paste it here."
 
@@ -31,9 +34,9 @@ Wait for them to paste the redirect URL. Then call `passwd_login` again with the
 
 ## Step 3: Verify
 
-Call `get_current_user` and show: "You're logged in as **{name}** ({email}). You're all set!"
+Call `get_current_user` and show: "Connected as **{name}** ({email}). You're all set!"
 
-Then tell them what they can do:
+Tell them:
 - Ask about any credential and I'll search your vault
-- Use `/passwd:run-with-secret` to inject secrets into commands
-- Ask for TOTP codes for 2FA
+- Use `/passwd:run-with-secret` to run a command with a credential injected securely
+- Ask for TOTP codes when you need 2FA
