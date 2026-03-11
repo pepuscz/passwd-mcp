@@ -25,7 +25,7 @@ Pick your platform. In all examples below, replace `https://your-deployment.pass
 
 ### Claude Cowork
 
-The agent can find and use credentials from your passwd.team vault — raw values never enter the AI context.
+The plugin bundles the MCP server (browse vault, TOTP codes) and an agent CLI skill (`exec --inject`) — your agent gets both.
 
 **1. Install the plugin** — in Cowork, go to **Plugins** and add [`packages/passwd-plugin`](https://github.com/pepuscz/passwd/tree/main/packages/passwd-plugin) from this repository.
 
@@ -89,7 +89,7 @@ Store your API keys as secrets in passwd.team, then use their IDs in the `id` fi
 ````markdown
 ---
 name: passwd
-description: "Find and use team credentials safely."
+description: "Browse team credentials and generate TOTP codes."
 metadata:
   {
     "openclaw":
@@ -102,7 +102,7 @@ metadata:
 
 # passwd
 
-Find and use credentials from your team's passwd.team vault. Always use `--json` for structured output.
+Browse credentials and generate TOTP codes from your team's passwd.team vault. Always use `--json` for structured output.
 
 CMD: `npx -y @passwd/passwd-agent-cli@1.3.1`
 
@@ -113,13 +113,6 @@ Info:      CMD get SECRET_ID --json
 TOTP code: CMD totp SECRET_ID
 Whoami:    CMD whoami --json
 Envs:      CMD envs --json
-
-## Use credentials
-
-Inject credentials as env vars:
-CMD exec --inject DB_PASS=SECRET_ID:password -- psql -h host -U user
-
-Multiple secrets: add more `--inject VAR=ID:field` flags.
 
 ## Multi-environment
 
@@ -198,9 +191,9 @@ Check [releases](https://github.com/pepuscz/passwd/releases) for new versions, t
 
 ## Authentication
 
-Google OAuth2. On first use, the `passwd_login` tool (MCP) or `passwd login` (CLI) will guide you through authentication. Tokens are cached per-environment in `~/.passwd/` and auto-refresh.
+Google OAuth2. On first use, the `passwd_login` tool (MCP) or `passwd login` (CLI) will guide you through authentication. Tokens are stored in your platform's native keychain (macOS Keychain) and auto-refresh.
 
-Set `PASSWD_ACCESS_TOKEN` env var to skip OAuth entirely.
+Set `PASSWD_ACCESS_TOKEN` env var to skip OAuth — required in headless/CI environments where no keychain is available.
 
 ## MCP tools reference
 
