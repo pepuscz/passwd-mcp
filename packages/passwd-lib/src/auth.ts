@@ -76,7 +76,7 @@ async function getOrCreateEncryptionKey(): Promise<Buffer> {
   const saved = await keychainSave(ENCRYPTION_KEY_ACCOUNT, hex);
   if (!saved) {
     throw new Error(
-      "No keychain available. Set PASSWD_ACCESS_TOKEN or ensure macOS Keychain is accessible.",
+      "No keychain available. Ensure macOS Keychain or Linux secret-tool (libsecret) is accessible.",
     );
   }
   return key;
@@ -307,7 +307,7 @@ async function updateEnvironmentIndex(origin: string): Promise<void> {
   }
 
   await mkdir(TOKEN_DIR, { recursive: true, mode: 0o700 });
-  await writeFile(envFile, JSON.stringify(envs, null, 2), { encoding: "utf-8" });
+  await writeFile(envFile, JSON.stringify(envs, null, 2), { encoding: "utf-8", mode: 0o600 });
 }
 
 async function removeFromEnvironmentIndex(origin: string): Promise<void> {
@@ -317,7 +317,7 @@ async function removeFromEnvironmentIndex(origin: string): Promise<void> {
     let envs = JSON.parse(content) as EnvInfo[];
     if (!Array.isArray(envs)) return;
     envs = envs.filter((e) => e.origin !== origin);
-    await writeFile(envFile, JSON.stringify(envs, null, 2), { encoding: "utf-8" });
+    await writeFile(envFile, JSON.stringify(envs, null, 2), { encoding: "utf-8", mode: 0o600 });
   } catch {
     // file doesn't exist, nothing to remove
   }
@@ -344,12 +344,6 @@ export function getTokenDir(): string {
 }
 
 export async function loadTokens(): Promise<AuthTokens | null> {
-  // Check env var first
-  const envToken = process.env.PASSWD_ACCESS_TOKEN;
-  if (envToken) {
-    return { access_token: envToken };
-  }
-
   // Load encryption key (don't create if missing)
   const key = await getEncryptionKey();
   if (!key) return null;
@@ -374,7 +368,7 @@ export async function loadTokens(): Promise<AuthTokens | null> {
 export async function getAccessToken(): Promise<string> {
   const tokens = await loadTokens();
   if (!tokens) {
-    throw new Error("Not authenticated. Use the passwd_login tool or set PASSWD_ACCESS_TOKEN.");
+    throw new Error("Not authenticated. Run `passwd login` or use the passwd_login tool.");
   }
 
   // Proactively refresh if token expires within 5 minutes

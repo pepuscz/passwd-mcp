@@ -14,8 +14,7 @@ export async function execCommand(
   const injections = opts.inject ?? [];
   const env: Record<string, string> = { ...process.env } as Record<string, string>;
 
-  // Scrub passwd credentials so the child only gets the specific fields requested
-  delete env.PASSWD_ACCESS_TOKEN;
+  // Scrub passwd config so the child only gets the specific fields requested
   delete env.PASSWD_API_URL;
   delete env.PASSWD_CLIENT_ID;
 

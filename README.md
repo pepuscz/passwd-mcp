@@ -205,9 +205,7 @@ Check [releases](https://github.com/pepuscz/passwd/releases) for new versions, t
 
 ## Authentication
 
-Google OAuth2. On first use, the `passwd_login` tool (MCP) or `passwd login` (CLI) will guide you through authentication. Tokens are encrypted at rest on your machine and auto-refresh.
-
-Set `PASSWD_ACCESS_TOKEN` env var to skip OAuth — required in headless/CI environments.
+Google OAuth2. On first use, the `passwd_login` tool (MCP) or `passwd login` (CLI) will guide you through authentication. Tokens are encrypted at rest on your machine and auto-refresh. Requires macOS Keychain or Linux `secret-tool` (libsecret).
 
 ## MCP tools reference
 
@@ -263,7 +261,6 @@ The full CLI (`@passwd/passwd-cli`, binary `passwd`) has complete vault access i
 | Variable | Required | Description |
 |---|---|---|
 | `PASSWD_ORIGIN` | **Yes** | Your passwd.team URL (default `https://app.passwd.team`) |
-| `PASSWD_ACCESS_TOKEN` | No | Skip OAuth — use a pre-existing Bearer token |
 | `PASSWD_API_URL` | No | API base URL override |
 | `PASSWD_CLIENT_ID` | No | Google OAuth client ID override (auto-discovered from deployment) |
 

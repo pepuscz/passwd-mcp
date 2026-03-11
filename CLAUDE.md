@@ -32,7 +32,7 @@ packages/
 - Client-side filtering: the passwd API returns all secrets at once. Filtering/pagination is done in `listSecrets()`. MCP defaults to limit 50, CLI defaults to no limit.
 - `passwd get <id> --field password` outputs raw value with no trailing newline (for `$()` piping)
 - `passwd exec --inject VAR=ID:FIELD` fetches secrets in parallel, execs child with `stdio: inherit`
-- Token storage uses VS Code pattern: one AES-256-GCM encryption key stored in platform keychain (macOS `security` CLI / Linux `secret-tool` via libsecret), account `encryption-key`. Encrypted token blobs stored as files at `~/.passwd/tokens-{hash}.json`. Format: `{v:1, iv, tag, data}` hex-encoded. Keychain key created on first `saveTokens()`, shared across environments. `deleteTokens()` removes the file but not the key. Linux `secret-tool store` reads value via stdin (no process list exposure). Headless/CI environments require `PASSWD_ACCESS_TOKEN` env var. Zero npm dependencies maintained (`node:crypto` built-in).
+- Token storage uses VS Code pattern: one AES-256-GCM encryption key stored in platform keychain (macOS `security` CLI / Linux `secret-tool` via libsecret), account `encryption-key`. Encrypted token blobs stored as files at `~/.passwd/tokens-{hash}.json`. Format: `{v:1, iv, tag, data}` hex-encoded. Keychain key created on first `saveTokens()`, shared across environments. `deleteTokens()` removes the file but not the key. Linux `secret-tool store` reads value via stdin (no process list exposure). No env var bypass — keychain is required. Zero npm dependencies maintained (`node:crypto` built-in).
 
 ## Required env var
 
@@ -40,8 +40,7 @@ packages/
 
 ## Authentication
 
-Google OAuth2. Tokens encrypted at rest at `~/.passwd/tokens-<hash>.json` (AES-256-GCM, key in macOS Keychain). Auto-refreshes on 401.
-Skip with `PASSWD_ACCESS_TOKEN` env var.
+Google OAuth2. Tokens encrypted at rest at `~/.passwd/tokens-<hash>.json` (AES-256-GCM, key in platform keychain). Auto-refreshes on 401. Requires macOS Keychain or Linux secret-tool.
 
 ## Tests
 
