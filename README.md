@@ -30,7 +30,7 @@ The plugin bundles the MCP server (browse vault, TOTP codes) and an agent CLI sk
 
 **1. Install the plugin** — in Cowork, go to **Plugins → Personal → +** → **Add marketplace from GitHub**, enter `https://github.com/pepuscz/passwd` and click **Sync**.
 
-**2. Run `/passwd:login`** — the command will ask for your deployment URL and guide you through Google OAuth login.
+**2. Run `/passwd:connect`** — the command will ask for your deployment URL and guide you through Google OAuth sign-in.
 
 Neither the MCP server nor the agent CLI can output raw credential values — exposure is structurally prevented, not just policy-based.
 

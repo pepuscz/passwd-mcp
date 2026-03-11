@@ -1,6 +1,6 @@
 ---
-name: login
-description: Connect to your passwd.team vault (run this after installing the plugin)
+name: connect
+description: Connect to your passwd.team vault
 ---
 
 Connect the user to their passwd.team vault. This is an interactive conversation — ask one question at a time and wait for the response.
@@ -18,11 +18,11 @@ Ask: "Are you using the default passwd.team deployment (`app.passwd.team`), or d
 1. Go to **Plugins → Passwd → Connectors → passwd-mcp → Edit**
 2. Change `PASSWD_ORIGIN` to `{their URL}`
 3. Save and restart this conversation
-4. Run `/passwd:login` again"
+4. Run `/passwd:connect` again"
 
 Stop here — do not continue until they restart.
 
-## Step 2: Login
+## Step 2: Sign in
 
 Tell the user: "Let me connect to your passwd.team vault. A browser window will open for Google sign-in."
 

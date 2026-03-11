@@ -1,7 +1,7 @@
 {
   "name": "passwd",
-  "version": "1.4.6",
-  "description": "passwd.team for AI agents — browse credentials, generate TOTP codes, and inject secrets into commands without seeing raw values. Run /passwd:login after installing.",
+  "version": "1.4.7",
+  "description": "passwd.team vault access — search secrets, view details, get TOTP codes, and run commands with injected credentials. Run /passwd:connect after installing.",
   "author": {
     "name": "passwd.team"
   }
