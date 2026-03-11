@@ -21,6 +21,7 @@ Pick your platform. In all examples below, replace `https://your-deployment.pass
 | Claude Cowork | [Claude Cowork](#claude-cowork) |
 | OpenClaw | [OpenClaw](#openclaw) |
 | Any MCP client | [MCP server](#mcp-server) |
+| AI agents with shell access | [Agent CLI](#agent-cli) |
 | Terminal / scripts / CI | [CLI](#cli) |
 
 ### Claude Cowork
@@ -153,6 +154,19 @@ If you just want read-only access to your vault from any MCP-compatible client �
 ```
 
 The MCP server is read-only (no create, update, delete, or share) and credential fields are replaced with `••••••••` at the code level — the agent never sees raw values. To inject credentials into commands, pair it with the agent CLI (`@passwd/passwd-agent-cli`).
+
+### Agent CLI
+
+The agent CLI (`@passwd/passwd-agent-cli`) is a hardened subset of the full CLI — no command can output raw credential values. It adds `exec --inject` for injecting secrets into subprocesses with stdout always masked. Use it with any AI agent that has shell access (Claude Code, Cowork, or any MCP client paired with the MCP server).
+
+```bash
+export PASSWD_ORIGIN=https://your-deployment.passwd.team
+npx @passwd/passwd-agent-cli@1.3.1 login
+npx @passwd/passwd-agent-cli@1.3.1 list
+npx @passwd/passwd-agent-cli@1.3.1 exec --inject DB_PASS=SECRET_ID:password -- psql -h host -U app
+```
+
+Credentials are injected as environment variables into the child process. Stdout is always masked — if the subprocess prints a secret value, it's replaced with `<concealed by passwd>`. The raw values never enter the AI context.
 
 ### CLI
 
