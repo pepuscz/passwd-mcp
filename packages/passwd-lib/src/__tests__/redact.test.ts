@@ -32,24 +32,24 @@ describe("redactSecret", () => {
     assert.equal((result as any).cvvCode, REDACTED);
   });
 
-  it("redacts password on apiCredentials", () => {
+  it("redacts credentials on apiCredentials", () => {
     const secret: Secret = {
       type: "apiCredentials",
       name: "Stripe",
-      password: "sk_test_123",
-    };
-    const result = redactSecret(secret);
-    assert.equal((result as any).password, REDACTED);
-  });
-
-  it("redacts credentials on databaseCredentials", () => {
-    const secret: Secret = {
-      type: "databaseCredentials",
-      name: "Postgres",
-      credentials: "host=localhost password=abc",
+      credentials: "sk_test_123",
     };
     const result = redactSecret(secret);
     assert.equal((result as any).credentials, REDACTED);
+  });
+
+  it("redacts password on databaseCredentials", () => {
+    const secret: Secret = {
+      type: "databaseCredentials",
+      name: "Postgres",
+      password: "host=localhost password=abc",
+    };
+    const result = redactSecret(secret);
+    assert.equal((result as any).password, REDACTED);
   });
 
   it("redacts privateKey on sshKey", () => {
@@ -99,6 +99,64 @@ describe("redactSecret", () => {
     assert.equal(result.username, "admin");
     assert.equal(result.web, "https://example.com");
     assert.equal(result.type, "password");
+  });
+
+  it("preserves non-sensitive paymentCard fields (expirationDate, cardholderName)", () => {
+    const secret: Secret = {
+      type: "paymentCard",
+      name: "Visa",
+      cardNumber: "4111111111111111",
+      cvvCode: "123",
+      expirationDate: "12/30",
+      cardholderName: "Test Holder",
+    };
+    const result = redactSecret(secret);
+    assert.equal((result as any).expirationDate, "12/30");
+    assert.equal((result as any).cardholderName, "Test Holder");
+    assert.equal((result as any).cardNumber, REDACTED);
+    assert.equal((result as any).cvvCode, REDACTED);
+  });
+
+  it("preserves non-sensitive apiCredentials fields (hostname)", () => {
+    const secret: Secret = {
+      type: "apiCredentials",
+      name: "API",
+      credentials: "sk_test_123",
+      hostname: "api.example.com",
+    };
+    const result = redactSecret(secret);
+    assert.equal((result as any).hostname, "api.example.com");
+    assert.equal((result as any).credentials, REDACTED);
+  });
+
+  it("preserves non-sensitive databaseCredentials fields (databaseName, databaseType, server, port)", () => {
+    const secret: Secret = {
+      type: "databaseCredentials",
+      name: "DB",
+      password: "secret",
+      databaseName: "mydb",
+      databaseType: "postgresql",
+      server: "db.example.com",
+      port: "5432",
+    };
+    const result = redactSecret(secret);
+    assert.equal((result as any).databaseName, "mydb");
+    assert.equal((result as any).databaseType, "postgresql");
+    assert.equal((result as any).server, "db.example.com");
+    assert.equal((result as any).port, "5432");
+    assert.equal((result as any).password, REDACTED);
+  });
+
+  it("preserves non-sensitive sshKey fields (publicKey)", () => {
+    const secret: Secret = {
+      type: "sshKey",
+      name: "Key",
+      privateKey: "-----BEGIN RSA PRIVATE KEY-----\n...",
+      publicKey: "ssh-ed25519 AAAAC3 test@test",
+    };
+    const result = redactSecret(secret);
+    assert.equal((result as any).publicKey, "ssh-ed25519 AAAAC3 test@test");
+    assert.equal((result as any).privateKey, REDACTED);
   });
 
   it("leaves null/undefined sensitive fields as-is", () => {

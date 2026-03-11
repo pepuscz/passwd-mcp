@@ -3,8 +3,8 @@ import { execFile } from "node:child_process";
 const SERVICE = "passwd.team";
 const TIMEOUT = 10_000;
 
-let _available: boolean | null = null;
-let _backend: "security" | "secret-tool" | null = null;
+type Backend = "security" | "secret-tool" | "none";
+let _backend: Backend | null = null; // null = not yet checked
 
 function run(cmd: string, args: string[], stdin?: string): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -18,36 +18,39 @@ function run(cmd: string, args: string[], stdin?: string): Promise<string> {
   });
 }
 
-export async function isKeychainAvailable(): Promise<boolean> {
-  if (_available !== null) return _available;
+async function detectBackend(): Promise<Backend> {
+  if (_backend !== null) return _backend;
 
   if (process.platform === "darwin") {
     try {
       await run("security", ["default-keychain"]);
-      _available = true;
       _backend = "security";
     } catch {
-      _available = false;
+      _backend = "none";
     }
   } else if (process.platform === "linux") {
     try {
       await run("which", ["secret-tool"]);
-      _available = true;
       _backend = "secret-tool";
     } catch {
-      _available = false;
+      _backend = "none";
     }
   } else {
-    _available = false;
+    _backend = "none";
   }
 
-  return _available;
+  return _backend;
+}
+
+export async function isKeychainAvailable(): Promise<boolean> {
+  return (await detectBackend()) !== "none";
 }
 
 export async function keychainSave(account: string, value: string): Promise<boolean> {
-  if (!(await isKeychainAvailable())) return false;
+  const backend = await detectBackend();
+  if (backend === "none") return false;
   try {
-    if (_backend === "security") {
+    if (backend === "security") {
       await run("security", [
         "add-generic-password",
         "-s", SERVICE,
@@ -71,9 +74,10 @@ export async function keychainSave(account: string, value: string): Promise<bool
 }
 
 export async function keychainLoad(account: string): Promise<string | null> {
-  if (!(await isKeychainAvailable())) return null;
+  const backend = await detectBackend();
+  if (backend === "none") return null;
   try {
-    if (_backend === "security") {
+    if (backend === "security") {
       const result = await run("security", [
         "find-generic-password",
         "-s", SERVICE,
@@ -94,29 +98,6 @@ export async function keychainLoad(account: string): Promise<string | null> {
   }
 }
 
-export async function keychainDelete(account: string): Promise<boolean> {
-  if (!(await isKeychainAvailable())) return false;
-  try {
-    if (_backend === "security") {
-      await run("security", [
-        "delete-generic-password",
-        "-s", SERVICE,
-        "-a", account,
-      ]);
-    } else {
-      await run("secret-tool", [
-        "clear",
-        "service", SERVICE,
-        "account", account,
-      ]);
-    }
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 export function resetKeychainCache(): void {
-  _available = null;
   _backend = null;
 }

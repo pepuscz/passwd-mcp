@@ -64,12 +64,19 @@ export function decrypt(blob: string, key: Buffer): string {
 }
 
 // ---------------------------------------------------------------------------
-// Encryption key management
+// Encryption key management (cached after first retrieval)
 // ---------------------------------------------------------------------------
 
+let _encryptionKey: Buffer | null | undefined = undefined; // undefined = not loaded
+
 async function getOrCreateEncryptionKey(): Promise<Buffer> {
+  if (_encryptionKey) return _encryptionKey;
+
   const existing = await keychainLoad(ENCRYPTION_KEY_ACCOUNT);
-  if (existing) return Buffer.from(existing, "hex");
+  if (existing) {
+    _encryptionKey = Buffer.from(existing, "hex");
+    return _encryptionKey;
+  }
 
   const key = randomBytes(32);
   const hex = key.toString("hex");
@@ -79,16 +86,18 @@ async function getOrCreateEncryptionKey(): Promise<Buffer> {
       "No keychain available. Ensure macOS Keychain or Linux secret-tool (libsecret) is accessible.",
     );
   }
+  _encryptionKey = key;
   return key;
 }
 
 async function getEncryptionKey(): Promise<Buffer | null> {
+  if (_encryptionKey !== undefined) return _encryptionKey;
   const hex = await keychainLoad(ENCRYPTION_KEY_ACCOUNT);
-  if (!hex) return null;
-  return Buffer.from(hex, "hex");
+  _encryptionKey = hex ? Buffer.from(hex, "hex") : null;
+  return _encryptionKey;
 }
 
-function requireHttps(url: string, label: string): void {
+export function requireHttps(url: string, label: string): void {
   if (
     !url.startsWith("https://") &&
     !url.startsWith("http://localhost") &&
@@ -299,14 +308,13 @@ async function updateEnvironmentIndex(origin: string): Promise<void> {
   }
 
   const idx = envs.findIndex((e) => e.origin === origin);
-  const entry: EnvInfo = { origin, savedAt: Date.now() };
   if (idx >= 0) {
-    envs[idx] = entry;
+    envs[idx] = { origin, savedAt: Date.now() };
   } else {
-    envs.push(entry);
+    envs.push({ origin, savedAt: Date.now() });
   }
 
-  await mkdir(TOKEN_DIR, { recursive: true, mode: 0o700 });
+  // TOKEN_DIR already created by saveTokens caller
   await writeFile(envFile, JSON.stringify(envs, null, 2), { encoding: "utf-8", mode: 0o600 });
 }
 
@@ -337,6 +345,7 @@ export function resetDiscoveryCache(): void {
   _discoveredApiUrl = null;
   _discoveredClientId = null;
   _discoveryDone = false;
+  _encryptionKey = undefined;
 }
 
 export function getTokenDir(): string {

@@ -19,7 +19,6 @@ import {
   buildOAuthUrl,
   extractCodeFromRedirectUrl,
   exchangeCode,
-  loadTokens,
   listSecrets,
   getSecret,
   getTotpCode,
@@ -29,7 +28,7 @@ import {
 
 const server = new McpServer({
   name: "passwd-mcp",
-  version: "1.4.1",
+  version: "1.4.2",
 });
 
 // --- Tool 1: passwd_login ---

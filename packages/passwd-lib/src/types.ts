@@ -85,21 +85,29 @@ export interface PaymentCardSecret extends SecretBase {
   type: "paymentCard";
   cardNumber?: string;
   cvvCode?: string;
+  expirationDate?: string;
+  cardholderName?: string;
 }
 
 export interface ApiCredentialsSecret extends SecretBase {
   type: "apiCredentials";
-  password?: string;
+  credentials?: string;
+  hostname?: string;
 }
 
 export interface DatabaseCredentialsSecret extends SecretBase {
   type: "databaseCredentials";
-  credentials?: string;
+  password?: string;
+  databaseName?: string;
+  databaseType?: string;
+  server?: string;
+  port?: string | null;
 }
 
 export interface SshKeySecret extends SecretBase {
   type: "sshKey";
   privateKey?: string;
+  publicKey?: string;
 }
 
 export interface SecureNoteSecret extends SecretBase {

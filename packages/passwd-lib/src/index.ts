@@ -24,6 +24,7 @@ export type {
 } from "./types.js";
 
 export {
+  requireHttps,
   getApiUrl,
   buildOAuthUrl,
   extractCodeFromRedirectUrl,

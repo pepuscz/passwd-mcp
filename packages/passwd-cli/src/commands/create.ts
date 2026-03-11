@@ -4,6 +4,7 @@ import { createSecret } from "@passwd/passwd-lib";
 import type { SecretType } from "@passwd/passwd-lib";
 import { formatJson } from "../util/format.js";
 import { parseRefFlag } from "../util/parse-ref.js";
+import { guessMime } from "../util/mime.js";
 
 export async function createCommand(opts: {
   type: string;
@@ -22,7 +23,15 @@ export async function createCommand(opts: {
   cvvCode?: string;
   credentials?: string;
   privateKey?: string;
+  publicKey?: string;
   secureNote?: string;
+  expirationDate?: string;
+  cardholderName?: string;
+  hostname?: string;
+  databaseName?: string;
+  databaseType?: string;
+  server?: string;
+  port?: string;
 }): Promise<void> {
   const payload: Record<string, unknown> = {
     type: opts.type as SecretType,
@@ -53,24 +62,16 @@ export async function createCommand(opts: {
   if (opts.cvvCode !== undefined) payload.cvvCode = opts.cvvCode;
   if (opts.credentials !== undefined) payload.credentials = opts.credentials;
   if (opts.privateKey !== undefined) payload.privateKey = opts.privateKey;
+  if (opts.publicKey !== undefined) payload.publicKey = opts.publicKey;
   if (opts.secureNote !== undefined) payload.secureNote = opts.secureNote;
+  if (opts.expirationDate !== undefined) payload.expirationDate = opts.expirationDate;
+  if (opts.cardholderName !== undefined) payload.cardholderName = opts.cardholderName;
+  if (opts.hostname !== undefined) payload.hostname = opts.hostname;
+  if (opts.databaseName !== undefined) payload.databaseName = opts.databaseName;
+  if (opts.databaseType !== undefined) payload.databaseType = opts.databaseType;
+  if (opts.server !== undefined) payload.server = opts.server;
+  if (opts.port !== undefined) payload.port = opts.port;
 
   const secret = await createSecret(payload);
   console.log(formatJson(secret));
-}
-
-function guessMime(ext: string): string {
-  const map: Record<string, string> = {
-    txt: "text/plain",
-    pdf: "application/pdf",
-    png: "image/png",
-    jpg: "image/jpeg",
-    jpeg: "image/jpeg",
-    gif: "image/gif",
-    json: "application/json",
-    xml: "application/xml",
-    csv: "text/csv",
-    zip: "application/zip",
-  };
-  return map[ext.toLowerCase()] ?? "application/octet-stream";
 }

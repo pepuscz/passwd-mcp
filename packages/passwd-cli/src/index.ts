@@ -23,7 +23,7 @@ const program = new Command();
 program
   .name("passwd")
   .description("CLI for passwd.team password manager")
-  .version("1.3.1")
+  .version("1.4.2")
   .enablePositionalOptions()
   .option("--env <name>", "Target a specific environment (substring match against known origins)");
 
@@ -81,9 +81,17 @@ program
   .option("--totp <secret>", "TOTP secret key")
   .option("--card-number <num>", "Card number")
   .option("--cvv-code <code>", "CVV code")
-  .option("--credentials <creds>", "Database credentials")
+  .option("--credentials <creds>", "API credentials")
   .option("--private-key <key>", "SSH private key")
+  .option("--public-key <key>", "SSH public key")
   .option("--secure-note <text>", "Secure note content")
+  .option("--expiration-date <date>", "Card expiration date (MM/YY)")
+  .option("--cardholder-name <name>", "Cardholder name")
+  .option("--hostname <host>", "API hostname")
+  .option("--database-name <name>", "Database name")
+  .option("--database-type <type>", "Database type")
+  .option("--server <host>", "Database server")
+  .option("--port <num>", "Database port")
   .action((opts) => createCommand(opts).catch(die));
 
 program
@@ -103,9 +111,17 @@ program
   .option("--totp <secret>", "TOTP secret key")
   .option("--card-number <num>", "Card number")
   .option("--cvv-code <code>", "CVV code")
-  .option("--credentials <creds>", "Database credentials")
+  .option("--credentials <creds>", "API credentials")
   .option("--private-key <key>", "SSH private key")
+  .option("--public-key <key>", "SSH public key")
   .option("--secure-note <text>", "Secure note content")
+  .option("--expiration-date <date>", "Card expiration date (MM/YY)")
+  .option("--cardholder-name <name>", "Cardholder name")
+  .option("--hostname <host>", "API hostname")
+  .option("--database-name <name>", "Database name")
+  .option("--database-type <type>", "Database type")
+  .option("--server <host>", "Database server")
+  .option("--port <num>", "Database port")
   .action((id, opts) => updateCommand(id, opts).catch(die));
 
 program

@@ -72,7 +72,8 @@ Run `npm test` before every commit. Integration tests before release.
    - `packages/passwd-cli/package.json` — version + `@passwd/passwd-lib` dep
    - `packages/passwd-agent-cli/package.json` — version + `@passwd/passwd-lib` dep
    - `packages/passwd-mcp/src/index.ts` — MCP server version string
-   - `packages/passwd-agent-cli/src/index.ts` — version string
+   - `packages/passwd-cli/src/index.ts` — CLI version string
+   - `packages/passwd-agent-cli/src/index.ts` — CLI version string
    - `README.md` — all `@x.y.z` references (use replace_all)
 2. `npm install` — regenerate lockfile
 3. `npm run build` — verify it compiles
