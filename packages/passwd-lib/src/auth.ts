@@ -1,18 +1,91 @@
-import { readFile, writeFile, mkdir, chmod } from "node:fs/promises";
-import { randomUUID, createHash } from "node:crypto";
+import { readFile, writeFile, mkdir, unlink } from "node:fs/promises";
+import {
+  randomUUID,
+  randomBytes,
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+} from "node:crypto";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import type { AuthTokens } from "./types.js";
+import { keychainSave, keychainLoad } from "./keychain.js";
+import type { EnvInfo } from "./envs.js";
 
 const GOOGLE_AUTH_ORIGIN = "https://accounts.google.com/o/oauth2/v2/auth";
 const SCOPES = "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email";
 
 const TOKEN_DIR = join(homedir(), ".passwd");
+const ENCRYPTION_KEY_ACCOUNT = "encryption-key";
 
-function getTokenFile(): string {
-  const origin = getOrigin();
-  const hash = createHash("sha256").update(origin).digest("hex").slice(0, 12);
+// ---------------------------------------------------------------------------
+// Token file path (hash-based)
+// ---------------------------------------------------------------------------
+
+function getTokenFile(origin: string): string {
+  const hash = createHash("sha256").update(origin).digest("hex").slice(0, 16);
   return join(TOKEN_DIR, `tokens-${hash}.json`);
+}
+
+// ---------------------------------------------------------------------------
+// AES-256-GCM encryption helpers (exported for unit tests)
+// ---------------------------------------------------------------------------
+
+export function encrypt(plaintext: string, key: Buffer): string {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
+  const encrypted = Buffer.concat([
+    cipher.update(plaintext, "utf8"),
+    cipher.final(),
+  ]);
+  const tag = cipher.getAuthTag();
+  return JSON.stringify({
+    v: 1,
+    iv: iv.toString("hex"),
+    tag: tag.toString("hex"),
+    data: encrypted.toString("hex"),
+  });
+}
+
+export function decrypt(blob: string, key: Buffer): string {
+  const { v, iv, tag, data } = JSON.parse(blob);
+  if (v !== 1) throw new Error("Unsupported encryption version");
+  const decipher = createDecipheriv(
+    "aes-256-gcm",
+    key,
+    Buffer.from(iv, "hex"),
+  );
+  decipher.setAuthTag(Buffer.from(tag, "hex"));
+  const decrypted = Buffer.concat([
+    decipher.update(Buffer.from(data, "hex")),
+    decipher.final(),
+  ]);
+  return decrypted.toString("utf8");
+}
+
+// ---------------------------------------------------------------------------
+// Encryption key management
+// ---------------------------------------------------------------------------
+
+async function getOrCreateEncryptionKey(): Promise<Buffer> {
+  const existing = await keychainLoad(ENCRYPTION_KEY_ACCOUNT);
+  if (existing) return Buffer.from(existing, "hex");
+
+  const key = randomBytes(32);
+  const hex = key.toString("hex");
+  const saved = await keychainSave(ENCRYPTION_KEY_ACCOUNT, hex);
+  if (!saved) {
+    throw new Error(
+      "No keychain available. Set PASSWD_ACCESS_TOKEN or ensure macOS Keychain is accessible.",
+    );
+  }
+  return key;
+}
+
+async function getEncryptionKey(): Promise<Buffer | null> {
+  const hex = await keychainLoad(ENCRYPTION_KEY_ACCOUNT);
+  if (!hex) return null;
+  return Buffer.from(hex, "hex");
 }
 
 function requireHttps(url: string, label: string): void {
@@ -202,14 +275,62 @@ export async function refreshToken(tokens: AuthTokens): Promise<AuthTokens> {
 }
 
 async function saveTokens(tokens: AuthTokens): Promise<void> {
-  const tokenFile = getTokenFile();
-  const data = { ...tokens, origin: getOrigin() };
+  const origin = getOrigin();
+  const key = await getOrCreateEncryptionKey();
+  const json = JSON.stringify({ ...tokens, origin });
+  const encrypted = encrypt(json, key);
   await mkdir(TOKEN_DIR, { recursive: true, mode: 0o700 });
-  await writeFile(tokenFile, JSON.stringify(data, null, 2), {
+  await writeFile(getTokenFile(origin), encrypted, {
     encoding: "utf-8",
     mode: 0o600,
   });
-  await chmod(tokenFile, 0o600);
+  await updateEnvironmentIndex(origin);
+}
+
+async function updateEnvironmentIndex(origin: string): Promise<void> {
+  const envFile = join(TOKEN_DIR, "environments.json");
+  let envs: EnvInfo[] = [];
+  try {
+    const content = await readFile(envFile, "utf-8");
+    envs = JSON.parse(content) as EnvInfo[];
+    if (!Array.isArray(envs)) envs = [];
+  } catch {
+    // file doesn't exist yet
+  }
+
+  const idx = envs.findIndex((e) => e.origin === origin);
+  const entry: EnvInfo = { origin, savedAt: Date.now() };
+  if (idx >= 0) {
+    envs[idx] = entry;
+  } else {
+    envs.push(entry);
+  }
+
+  await mkdir(TOKEN_DIR, { recursive: true, mode: 0o700 });
+  await writeFile(envFile, JSON.stringify(envs, null, 2), { encoding: "utf-8" });
+}
+
+async function removeFromEnvironmentIndex(origin: string): Promise<void> {
+  const envFile = join(TOKEN_DIR, "environments.json");
+  try {
+    const content = await readFile(envFile, "utf-8");
+    let envs = JSON.parse(content) as EnvInfo[];
+    if (!Array.isArray(envs)) return;
+    envs = envs.filter((e) => e.origin !== origin);
+    await writeFile(envFile, JSON.stringify(envs, null, 2), { encoding: "utf-8" });
+  } catch {
+    // file doesn't exist, nothing to remove
+  }
+}
+
+export async function deleteTokens(): Promise<void> {
+  const origin = getOrigin();
+  try {
+    await unlink(getTokenFile(origin));
+  } catch {
+    // file doesn't exist
+  }
+  await removeFromEnvironmentIndex(origin);
 }
 
 export function resetDiscoveryCache(): void {
@@ -229,9 +350,22 @@ export async function loadTokens(): Promise<AuthTokens | null> {
     return { access_token: envToken };
   }
 
+  // Load encryption key (don't create if missing)
+  const key = await getEncryptionKey();
+  if (!key) return null;
+
+  // Read encrypted token file
+  let content: string;
   try {
-    const content = await readFile(getTokenFile(), "utf-8");
-    return JSON.parse(content) as AuthTokens;
+    content = await readFile(getTokenFile(getOrigin()), "utf-8");
+  } catch {
+    return null;
+  }
+
+  // Decrypt and parse
+  try {
+    const json = decrypt(content, key);
+    return JSON.parse(json) as AuthTokens;
   } catch {
     return null;
   }

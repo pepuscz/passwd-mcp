@@ -32,6 +32,7 @@ packages/
 - Client-side filtering: the passwd API returns all secrets at once. Filtering/pagination is done in `listSecrets()`. MCP defaults to limit 50, CLI defaults to no limit.
 - `passwd get <id> --field password` outputs raw value with no trailing newline (for `$()` piping)
 - `passwd exec --inject VAR=ID:FIELD` fetches secrets in parallel, execs child with `stdio: inherit`
+- Token storage uses VS Code pattern: one AES-256-GCM encryption key stored in platform keychain (macOS `security` CLI / Linux `secret-tool` via libsecret), account `encryption-key`. Encrypted token blobs stored as files at `~/.passwd/tokens-{hash}.json`. Format: `{v:1, iv, tag, data}` hex-encoded. Keychain key created on first `saveTokens()`, shared across environments. `deleteTokens()` removes the file but not the key. Linux `secret-tool store` reads value via stdin (no process list exposure). Headless/CI environments require `PASSWD_ACCESS_TOKEN` env var. Zero npm dependencies maintained (`node:crypto` built-in).
 
 ## Required env var
 
@@ -39,7 +40,7 @@ packages/
 
 ## Authentication
 
-Google OAuth2. Tokens cached at `~/.passwd/tokens-<hash>.json`. Auto-refreshes on 401.
+Google OAuth2. Tokens encrypted at rest at `~/.passwd/tokens-<hash>.json` (AES-256-GCM, key in macOS Keychain). Auto-refreshes on 401.
 Skip with `PASSWD_ACCESS_TOKEN` env var.
 
 ## Tests
@@ -76,7 +77,9 @@ Run `npm test` before every commit. Integration tests before release.
    - `README.md` — all `@x.y.z` references (use replace_all)
 2. `npm install` — regenerate lockfile
 3. `npm run build` — verify it compiles
-4. Commit, push — GitHub Action (`.github/workflows/publish.yml`) auto-publishes all four packages to npm on push to main
-5. `gh release create vX.Y.Z`
+4. `npm test` — run unit tests
+5. `npm run test:integration` — run integration tests locally (requires `~/.passwd/` tokens)
+6. Commit, push — GitHub Action (`.github/workflows/publish.yml`) auto-publishes all four packages to npm on push to main
+7. `gh release create vX.Y.Z`
 
 Keep commit messages short for public repo.

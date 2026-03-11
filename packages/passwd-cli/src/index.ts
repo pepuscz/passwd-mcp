@@ -16,8 +16,7 @@ import { contactsCommand } from "./commands/contacts.js";
 import { envsCommand } from "./commands/envs.js";
 import { resolveCommand } from "./commands/resolve.js";
 import { formatError } from "./util/format.js";
-import { resolveEnv } from "./util/envs.js";
-import { resetDiscoveryCache, getTokenDir } from "@passwd/passwd-lib";
+import { resetDiscoveryCache, getTokenDir, resolveEnv } from "@passwd/passwd-lib";
 
 const program = new Command();
 

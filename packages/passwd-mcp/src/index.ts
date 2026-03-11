@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { execFile, exec } from "node:child_process";
+import { execFile } from "node:child_process";
 import { platform } from "node:os";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -8,7 +8,7 @@ import { z } from "zod";
 
 function openBrowser(url: string): void {
   if (platform() === "win32") {
-    exec(`start "" ${JSON.stringify(url)}`, () => {});
+    execFile("cmd.exe", ["/c", "start", "", url], () => {});
   } else {
     const cmd = platform() === "darwin" ? "open" : "xdg-open";
     execFile(cmd, [url], () => {});
@@ -29,7 +29,7 @@ import {
 
 const server = new McpServer({
   name: "passwd-mcp",
-  version: "1.3.1",
+  version: "1.4.0",
 });
 
 // --- Tool 1: passwd_login ---

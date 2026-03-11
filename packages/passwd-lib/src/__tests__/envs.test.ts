@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { listEnvironments, resolveEnv } from "@passwd/passwd-lib";
+import { listEnvironments, resolveEnv } from "../envs.js";
 
 let tmpDir: string;
 
@@ -21,12 +21,24 @@ describe("listEnvironments", () => {
       join(tmpDir, "environments.json"),
       JSON.stringify([
         { origin: "https://dev.passwd.team", savedAt: 1000 },
+        { origin: "https://staging.passwd.team", savedAt: 2000 },
       ]),
     );
     const results = await listEnvironments(tmpDir);
-    assert.equal(results.length, 1);
+    assert.equal(results.length, 2);
     assert.equal(results[0].origin, "https://dev.passwd.team");
     assert.equal(results[0].savedAt, 1000);
+  });
+
+  it("returns empty for missing file", async () => {
+    const results = await listEnvironments(tmpDir);
+    assert.equal(results.length, 0);
+  });
+
+  it("returns empty for corrupt JSON", async () => {
+    await writeFile(join(tmpDir, "environments.json"), "not json{{{");
+    const results = await listEnvironments(tmpDir);
+    assert.equal(results.length, 0);
   });
 
   it("returns empty for nonexistent directory", async () => {

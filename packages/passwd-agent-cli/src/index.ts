@@ -10,15 +10,14 @@ import { execCommand } from "./commands/exec.js";
 import { envsCommand } from "./commands/envs.js";
 import { resolveCommand } from "./commands/resolve.js";
 import { formatError } from "./util/format.js";
-import { resolveEnv } from "./util/envs.js";
-import { resetDiscoveryCache, getTokenDir } from "@passwd/passwd-lib";
+import { resetDiscoveryCache, getTokenDir, resolveEnv } from "@passwd/passwd-lib";
 
 const program = new Command();
 
 program
   .name("passwd-agent")
   .description("Agent-safe CLI for passwd.team — no command exposes raw credential values")
-  .version("1.3.1")
+  .version("1.4.0")
   .enablePositionalOptions()
   .option("--env <name>", "Target a specific environment (substring match against known origins)");
 

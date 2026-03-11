@@ -33,7 +33,15 @@ export {
   getAccessToken,
   resetDiscoveryCache,
   getTokenDir,
+  deleteTokens,
+  encrypt,
+  decrypt,
 } from "./auth.js";
+
+export type { EnvInfo } from "./envs.js";
+export { listEnvironments, resolveEnv } from "./envs.js";
+
+export { isKeychainAvailable, resetKeychainCache } from "./keychain.js";
 
 export type { ListSecretsParams, ListSecretsResult } from "./api.js";
 

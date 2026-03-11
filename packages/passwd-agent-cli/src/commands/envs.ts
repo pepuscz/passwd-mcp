@@ -1,8 +1,7 @@
-import { getTokenDir } from "@passwd/passwd-lib";
-import { scanTokenFiles } from "../util/envs.js";
+import { getTokenDir, listEnvironments } from "@passwd/passwd-lib";
 
 export async function envsCommand(opts: { json?: boolean }): Promise<void> {
-  const envs = await scanTokenFiles(getTokenDir());
+  const envs = await listEnvironments(getTokenDir());
 
   if (envs.length === 0) {
     console.log("No known environments. Log in with PASSWD_ORIGIN set first.");

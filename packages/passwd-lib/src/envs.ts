@@ -1,46 +1,26 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { AuthTokens } from "@passwd/passwd-lib";
 
 export interface EnvInfo {
   origin: string;
-  file: string;
   savedAt?: number;
 }
 
-export async function scanTokenFiles(tokenDir: string): Promise<EnvInfo[]> {
-  let files: string[];
+export async function listEnvironments(tokenDir: string): Promise<EnvInfo[]> {
   try {
-    files = await readdir(tokenDir);
+    const content = await readFile(join(tokenDir, "environments.json"), "utf-8");
+    const data = JSON.parse(content) as EnvInfo[];
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
-
-  const results: EnvInfo[] = [];
-  for (const file of files) {
-    if (!file.startsWith("tokens-") || !file.endsWith(".json")) continue;
-    try {
-      const content = await readFile(join(tokenDir, file), "utf-8");
-      const tokens = JSON.parse(content) as AuthTokens;
-      if (tokens.origin) {
-        results.push({
-          origin: tokens.origin,
-          file,
-          savedAt: tokens.saved_at,
-        });
-      }
-    } catch {
-      // skip unreadable/corrupt files
-    }
-  }
-  return results;
 }
 
 export async function resolveEnv(
   name: string,
   tokenDir: string,
 ): Promise<string> {
-  const envs = await scanTokenFiles(tokenDir);
+  const envs = await listEnvironments(tokenDir);
   if (envs.length === 0) {
     throw new Error(
       "No known environments. Log in with PASSWD_ORIGIN set first.",
