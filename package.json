@@ -5,7 +5,8 @@
     "packages/passwd-lib",
     "packages/passwd-mcp",
     "packages/passwd-cli",
-    "packages/passwd-agent-cli"
+    "packages/passwd-agent-cli",
+    "packages/passwd-mcpb"
   ],
   "scripts": {
     "build": "tsc -b",

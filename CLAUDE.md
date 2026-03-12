@@ -1,9 +1,10 @@
 # passwd
 
-Monorepo with four npm packages for [passwd.team](https://passwd.team):
+Monorepo with four npm packages + one desktop extension for [passwd.team](https://passwd.team):
 
 - **passwd-lib** — core library (auth, API client, types). Zero dependencies.
 - **passwd-mcp** — MCP server for AI assistants. Depends on passwd-lib, @modelcontextprotocol/sdk, zod.
+- **passwd-mcpb** — Desktop extension for Claude (.mcpb). All 8 tools including credential injection and MCP proxy. Depends on passwd-lib, @modelcontextprotocol/sdk, zod.
 - **passwd-cli** — full CLI tool. Depends on passwd-lib, commander.
 - **passwd-agent-cli** — agent-safe CLI (no command exposes raw credentials). Depends on passwd-lib, commander.
 
@@ -21,6 +22,7 @@ npm run clean        # tsc -b --clean
 packages/
   passwd-lib/src/        types.ts, auth.ts, api.ts, index.ts (barrel)
   passwd-mcp/src/        index.ts (MCP server with 5 read-only tools)
+  passwd-mcpb/src/       index.ts (desktop extension with 8 tools including run_with_credentials and MCP proxy)
   passwd-cli/src/        index.ts (commander), commands/*.ts, util/format.ts
   passwd-agent-cli/src/  index.ts (commander, 8 safe commands), commands/*.ts, util/
 ```
@@ -72,12 +74,10 @@ Run `npm test` before every commit. Integration tests before release.
    - `packages/passwd-cli/package.json` — version + `@passwd/passwd-lib` dep
    - `packages/passwd-agent-cli/package.json` — version + `@passwd/passwd-lib` dep
    - `packages/passwd-mcp/src/index.ts` — MCP server version string
+   - `packages/passwd-mcpb/src/index.ts` — MCPB server version string
+   - `packages/passwd-mcpb/manifest.json` — MCPB manifest version
    - `packages/passwd-cli/src/index.ts` — CLI version string
    - `packages/passwd-agent-cli/src/index.ts` — CLI version string
-   - `packages/passwd-plugin/.claude-plugin/plugin.json` — Cowork plugin version (single source of truth; NOT in marketplace.json)
-   - `packages/passwd-plugin/.mcp.json` — `@passwd/passwd-mcp@X.Y.Z` version
-   - `packages/passwd-plugin/skills/passwd/SKILL.md` — `@passwd/passwd-agent-cli@X.Y.Z` version
-   - `packages/passwd-plugin/commands/use-credential.md` — `@passwd/passwd-agent-cli@X.Y.Z` version
    - `README.md` — all `@x.y.z` references (use replace_all)
 2. `npm install` — regenerate lockfile
 3. `npm run build` — verify it compiles

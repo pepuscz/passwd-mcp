@@ -152,7 +152,6 @@ async function discoverFromOrigin(origin: string): Promise<void> {
     if (apiMatch?.[1]) {
       const discovered = apiMatch[1].replace(/\/+$/, "");
       requireHttps(discovered, "Discovered API URL");
-      requireSameOrigin(discovered, origin, "Discovered API URL");
       _discoveredApiUrl = discovered;
     }
 

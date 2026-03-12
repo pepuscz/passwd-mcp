@@ -4,12 +4,13 @@
 
 ## What it can do
 
-Three tools for different scopes — pick what fits your setup.
+Four tools for different scopes — pick what fits your setup.
 
 | Tool | Can do | Cannot do |
 |---|---|---|
+| **Desktop extension** | Browse secrets, TOTP, use credentials on your behalf (output masked) | Raw credential output, writes |
 | **MCP server** | Browse secrets, view details (redacted), pull TOTP codes | Credential output, writes, exec |
-| **Agent CLI** | Browse, TOTP, inject credentials via `exec` (stdout masked) | Raw credential output, writes |
+| **Agent CLI** | Browse, TOTP, run commands with credentials (stdout masked) | Raw credential output, writes |
 | **Full CLI** | Everything — raw values, create, update, delete, share | — |
 
 ## Setup
@@ -18,23 +19,29 @@ Pick your platform. In all examples below, replace `https://your-deployment.pass
 
 | Platform | Section |
 |---|---|
-| Claude Cowork | [Claude Cowork](#claude-cowork) |
+| Claude app (macOS) | [Claude](#claude) |
 | OpenClaw | [OpenClaw](#openclaw) |
 | Any MCP client | [MCP server](#mcp-server) |
 | AI agents with shell access | [Agent CLI](#agent-cli) |
 | Terminal / scripts / CI | [Full CLI](#full-cli) |
 
-### Claude Cowork
+### Claude
 
-The plugin bundles the MCP server (browse vault, TOTP codes) and an agent CLI skill (`exec --inject`) — your agent gets both.
+Desktop extension (`.mcpb`). Works in both Chat and Cowork tabs of the Claude macOS app. Credentials never reach the AI — all output is masked.
 
-**1. Install the plugin** — in Cowork, go to **Plugins → Personal → +** → **Add marketplace from GitHub**, enter `https://github.com/pepuscz/passwd` and click **Sync**.
+**1. Download** `passwd.mcpb` from the [latest release](https://github.com/pepuscz/passwd/releases).
 
-**2. Run `/passwd:connect`** — the command will ask for your deployment URL and guide you through Google OAuth sign-in.
+**2. Install** — double-click the file.
 
-Neither the MCP server nor the agent CLI can output raw credential values — exposure is structurally prevented, not just policy-based.
+**3. Configure** — enter your deployment URL (default: `https://app.passwd.team`).
 
-For multiple deployments, add separate MCP server entries in `.mcp.json` with different names and `PASSWD_ORIGIN` values.
+**4. Authenticate** — ask Claude to log in. A browser window opens for Google OAuth.
+
+**Connecting to services** — For services with an MCP server, the agent can interact with them directly. Add the MCP server URL and required headers to the secret's **note** field (or a link to the service's MCP docs). The agent reads the note and figures out the rest.
+
+Example — two messages work best:
+1. *"Find my Rohlik credentials in passwd and read the details"*
+2. *"Now buy me bananas"*
 
 ### OpenClaw
 
@@ -57,7 +64,7 @@ Resolve [SecretRefs](https://docs.openclaw.ai/gateway/secrets#secretref-contract
 **1. Authenticate** (the gateway runs `passwd-cli`, not the agent):
 
 ```bash
-PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-cli@1.4.4 login
+PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-cli@1.5.0 login
 ```
 
 **2. Add the secrets provider** to `gateway.config.json5`:
@@ -69,7 +76,7 @@ PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-cli@1.4.
       passwd: {
         source: "exec",
         command: "/usr/local/bin/npx",          // absolute path to npx
-        args: ["-y", "@passwd/passwd-cli@1.4.4", "resolve"],
+        args: ["-y", "@passwd/passwd-cli@1.5.0", "resolve"],
         passEnv: ["PASSWD_ORIGIN", "HOME"],
         allowSymlinkCommand: true,              // needed if npx is a symlink (Homebrew)
         trustedDirs: ["/usr/local", "/opt/homebrew"],
@@ -95,7 +102,7 @@ PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-cli@1.4.
 }
 ```
 
-Store your API keys as secrets in passwd.team, then use their IDs in the `id` field. Run `npx @passwd/passwd-cli@1.4.4 list` to find them.
+Store your API keys as secrets in passwd.team, then use their IDs in the `id` field. Run `npx @passwd/passwd-cli@1.5.0 list` to find them.
 
 #### Agent skill
 
@@ -104,7 +111,7 @@ Let the agent browse your vault, check TOTP codes, and inject credentials into c
 **1. Authenticate** with the agent-safe CLI:
 
 ```bash
-PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-agent-cli@1.4.4 login
+PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-agent-cli@1.5.0 login
 ```
 
 **2. Add the skill** at `~/.openclaw/workspace/skills/passwd/SKILL.md`:
@@ -127,7 +134,7 @@ metadata:
 
 Browse credentials and generate TOTP codes from your team's passwd.team vault. Always use `--json` for structured output.
 
-CMD: `npx -y @passwd/passwd-agent-cli@1.4.4`
+CMD: `npx -y @passwd/passwd-agent-cli@1.5.0`
 
 ## Commands
 
@@ -162,7 +169,7 @@ CMD envs --json
 
 **3. Restart the gateway** so the skill and provider are discovered.
 
-For multiple deployments, log in to each origin separately (`PASSWD_ORIGIN=... npx @passwd/passwd-agent-cli@1.4.4 login`). The agent can then switch with `--env` — see the Multi-environment section in the skill above.
+For multiple deployments, log in to each origin separately (`PASSWD_ORIGIN=... npx @passwd/passwd-agent-cli@1.5.0 login`). The agent can then switch with `--env` — see the Multi-environment section in the skill above.
 
 ### MCP server
 
@@ -173,7 +180,7 @@ If you just want read-only access to your vault from any MCP-compatible client �
   "mcpServers": {
     "passwd": {
       "command": "npx",
-      "args": ["-y", "@passwd/passwd-mcp@1.4.4"],
+      "args": ["-y", "@passwd/passwd-mcp@1.5.0"],
       "env": {
         "PASSWD_ORIGIN": "https://your-deployment.passwd.team"
       }
@@ -182,7 +189,7 @@ If you just want read-only access to your vault from any MCP-compatible client �
 }
 ```
 
-The MCP server is read-only (no create, update, delete, or share) and credential fields are replaced with `••••••••` at the code level — the agent never sees raw values. To inject credentials into commands, pair it with the agent CLI (`@passwd/passwd-agent-cli`).
+The MCP server is read-only (no create, update, delete, or share) and credential fields are always redacted. To run commands with credentials, pair it with the agent CLI (`@passwd/passwd-agent-cli`).
 
 ### Agent CLI
 
@@ -190,9 +197,9 @@ The agent CLI (`@passwd/passwd-agent-cli`) is a hardened subset of the full CLI 
 
 ```bash
 export PASSWD_ORIGIN=https://your-deployment.passwd.team
-npx @passwd/passwd-agent-cli@1.4.4 login
-npx @passwd/passwd-agent-cli@1.4.4 list
-npx @passwd/passwd-agent-cli@1.4.4 exec --inject DB_PASS=SECRET_ID:password -- psql -h host -U app
+npx @passwd/passwd-agent-cli@1.5.0 login
+npx @passwd/passwd-agent-cli@1.5.0 list
+npx @passwd/passwd-agent-cli@1.5.0 exec --inject DB_PASS=SECRET_ID:password -- psql -h host -U app
 ```
 
 Credentials are injected as environment variables into the child process. Stdout is always masked — if the subprocess prints a secret value, it's replaced with `<concealed by passwd>`. The raw values never enter the AI context.
@@ -205,17 +212,17 @@ The full CLI (`@passwd/passwd-cli`) has complete access to your vault — includ
 
 ```bash
 export PASSWD_ORIGIN=https://your-deployment.passwd.team
-npx @passwd/passwd-cli@1.4.4 login
-npx @passwd/passwd-cli@1.4.4 list
-npx @passwd/passwd-cli@1.4.4 --help
+npx @passwd/passwd-cli@1.5.0 login
+npx @passwd/passwd-cli@1.5.0 list
+npx @passwd/passwd-cli@1.5.0 --help
 ```
 
 For multiple deployments, log in to each origin separately, then use `--env` to switch:
 
 ```bash
-PASSWD_ORIGIN=https://acme.passwd.team npx @passwd/passwd-cli@1.4.4 login
-PASSWD_ORIGIN=https://initech.passwd.team npx @passwd/passwd-cli@1.4.4 login
-npx @passwd/passwd-cli@1.4.4 list --env acme
+PASSWD_ORIGIN=https://acme.passwd.team npx @passwd/passwd-cli@1.5.0 login
+PASSWD_ORIGIN=https://initech.passwd.team npx @passwd/passwd-cli@1.5.0 login
+npx @passwd/passwd-cli@1.5.0 list --env acme
 ```
 
 ### Passing sensitive values via stdin
@@ -240,7 +247,7 @@ Then use `node packages/passwd-mcp/dist/index.js`, `node packages/passwd-agent-c
 
 ## Upgrading
 
-Check [releases](https://github.com/pepuscz/passwd/releases) for new versions, then update the version number in your config — Cowork plugin `.mcp.json`, OpenClaw gateway config / SKILL.md, or CLI alias — and restart.
+Check [releases](https://github.com/pepuscz/passwd/releases) for new versions, then update the version number in your config — OpenClaw gateway config / SKILL.md, or CLI alias — and restart. The desktop extension updates by installing the new `.mcpb` file.
 
 ## Authentication
 
@@ -257,6 +264,14 @@ The MCP server (`@passwd/passwd-mcp`) can be installed standalone — see [MCP s
 | `get_secret` | Get secret details (credentials redacted) |
 | `get_totp_code` | Get current TOTP code (ephemeral 30s codes) |
 | `get_current_user` | Get authenticated user profile |
+
+The Claude desktop extension (`passwd.mcpb`) includes all 5 tools above plus:
+
+| Tool | Description |
+|---|---|
+| `run_with_credentials` | Run a command with secrets injected as env vars (stdout/stderr masked) |
+| `connect_mcp_service` | Connect to a remote MCP service using credentials from a secret (agent reads the note field for endpoint URL and header mapping) |
+| `call_remote_tool` | Call a tool on a connected remote MCP service (credentials injected as HTTP headers, response masked) |
 
 ## Agent CLI commands reference
 
@@ -309,9 +324,9 @@ The full CLI (`@passwd/passwd-cli`, binary `passwd`) has complete vault access i
 packages/
   passwd-lib/        Core library (types, auth, API — zero dependencies)
   passwd-mcp/        MCP server (depends on passwd-lib)
+  passwd-mcpb/       Desktop extension for Claude (.mcpb)
   passwd-cli/        Full CLI (depends on passwd-lib)
   passwd-agent-cli/  Agent CLI — no command exposes raw credentials (depends on passwd-lib)
-  passwd-plugin/     Cowork plugin (MCP config + agent-blind skill)
 ```
 
 ## License

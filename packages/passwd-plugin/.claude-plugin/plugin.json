@@ -1,8 +1,0 @@
-{
-  "name": "passwd",
-  "version": "1.4.7",
-  "description": "passwd.team vault access — search secrets, view details, get TOTP codes, and run commands with injected credentials. Run /passwd:connect after installing.",
-  "author": {
-    "name": "passwd.team"
-  }
-}
