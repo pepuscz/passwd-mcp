@@ -68,23 +68,11 @@ Run `npm test` before every commit. Integration tests before release.
 
 ## Release process
 
-1. Bump version — use `replace_all` to replace the old version string with the new one in every file. The version appears in 11 files:
-   - `packages/passwd-lib/package.json` — version
-   - `packages/passwd-mcp/package.json` — version + `@passwd/passwd-lib` dep
-   - `packages/passwd-mcpb/package.json` — version + `@passwd/passwd-lib` dep
-   - `packages/passwd-mcpb/manifest.json` — version
-   - `packages/passwd-mcpb/src/index.ts` — server version + clientInfo version
-   - `packages/passwd-cli/package.json` — version + `@passwd/passwd-lib` dep
-   - `packages/passwd-agent-cli/package.json` — version + `@passwd/passwd-lib` dep
-   - `packages/passwd-mcp/src/index.ts` — server version string
-   - `packages/passwd-cli/src/index.ts` — CLI version string
-   - `packages/passwd-agent-cli/src/index.ts` — CLI version string
-   - `README.md` — all `@x.y.z` references
+1. `bash scripts/bump-version.sh OLD_VERSION NEW_VERSION` — updates all 11 files and verifies no old version remains
 2. `npm install` — regenerate lockfile
 3. `npm run build` — verify it compiles
 4. `npm test` — run unit tests
 5. `npm run test:integration` — run integration tests locally (requires `~/.passwd/` tokens)
-6. Verify no old version remains: `grep -r "OLD_VERSION" --include="*.json" --include="*.ts" --include="*.md"` (lockfile excluded)
 7. Commit, push — GitHub Action auto-publishes all four npm packages on push to main
 8. `gh release create vX.Y.Z --title "vX.Y.Z — Short label"` — this creates a tag, which triggers a second CI run that builds `.mcpb` on macOS and attaches it to the release. Title must be ≤25 chars. Format: `vX.Y.Z — Two-three words`.
 9. Wait for CI — check `gh run list` to confirm all three jobs pass: `publish` (npm), `build-mcpb` (macOS build), `release-mcpb` (attaches `.mcpb` to release)
