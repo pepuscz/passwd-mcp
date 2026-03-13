@@ -83,3 +83,5 @@ Run `npm test` before every commit. Integration tests before release.
 **Build script note**: `packages/passwd-mcpb/build.sh` pins `@passwd/passwd-lib` to `latest` during bundle install (since the new version may not be published yet), then overwrites with the local build. This works both locally and in CI.
 
 Keep commit messages short for public repo. Don't expose security implementation details in public commits/releases.
+
+Release titles should describe what changed for the user, not internal implementation. Good: "v1.5.3 — MCP config from note". Bad: "v1.5.3 — Robust MCP parser".
