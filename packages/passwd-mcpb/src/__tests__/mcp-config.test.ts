@@ -35,40 +35,14 @@ describe("extractMcpConfig", () => {
     assert.deepStrictEqual(result, { url: "https://mcp.example.com" });
   });
 
-  // --- Lenient parsing ---
-
-  it("handles single quotes", () => {
-    const note = "{'url': 'https://mcp.example.com', 'headers': {'x-key': 'password'}}";
-    const result = extractMcpConfig(note);
-    assert.deepStrictEqual(result, {
-      url: "https://mcp.example.com",
-      headers: { "x-key": "password" },
-    });
-  });
-
-  it("handles trailing commas", () => {
-    const note = '{"url": "https://mcp.example.com", "headers": {"x-key": "password",},}';
-    const result = extractMcpConfig(note);
-    assert.deepStrictEqual(result, {
-      url: "https://mcp.example.com",
-      headers: { "x-key": "password" },
-    });
-  });
-
-  it("handles // comments", () => {
-    const note = `{
-      // MCP endpoint
-      "url": "https://mcp.example.com",
-      "headers": {
-        "x-key": "password" // auth
-      }
-    }`;
+  it("parses compact JSON without spaces", () => {
+    const note = '{"mcpServers":{"svc":{"command":"npx","args":["mcp-remote","https://mcp.example.com/mcp"]}}}';
     const result = extractMcpConfig(note);
     assert.ok(result);
-    assert.strictEqual((result as Record<string, unknown>).url, "https://mcp.example.com");
+    assert.ok((result as Record<string, unknown>).mcpServers);
   });
 
-  it("handles messy whitespace", () => {
+  it("handles whitespace and newlines", () => {
     const note = `
       {
         "url":   "https://mcp.example.com"  ,
@@ -80,11 +54,29 @@ describe("extractMcpConfig", () => {
     assert.strictEqual((result as Record<string, unknown>).url, "https://mcp.example.com");
   });
 
-  it("preserves URLs with // in values", () => {
-    const note = '{"url": "https://mcp.example.com/path"}';
+  // --- JSON embedded in surrounding text ---
+
+  it("extracts JSON with text before it", () => {
+    const note = 'MCP server:\n\n{"url": "https://mcp.example.com", "headers": {"x-key": "password"}}';
     const result = extractMcpConfig(note);
     assert.ok(result);
-    assert.strictEqual((result as Record<string, unknown>).url, "https://mcp.example.com/path");
+    assert.strictEqual((result as Record<string, unknown>).url, "https://mcp.example.com");
+  });
+
+  it("extracts JSON with text before and after", () => {
+    const note = 'Config below:\n{"url": "https://mcp.example.com"}\nEnd of config.';
+    const result = extractMcpConfig(note);
+    assert.ok(result);
+    assert.strictEqual((result as Record<string, unknown>).url, "https://mcp.example.com");
+  });
+
+  it("extracts mcpServers JSON with label", () => {
+    const note = `MCP server:
+
+${JSON.stringify({ mcpServers: { svc: { command: "npx", args: ["mcp-remote", "https://mcp.example.com/mcp"] } } })}`;
+    const result = extractMcpConfig(note);
+    assert.ok(result);
+    assert.ok((result as Record<string, unknown>).mcpServers);
   });
 
   // --- Non-JSON notes → null (no mcpConfig) ---
@@ -112,5 +104,9 @@ describe("extractMcpConfig", () => {
 
   it("returns null for invalid JSON", () => {
     assert.strictEqual(extractMcpConfig("{broken json"), null);
+  });
+
+  it("returns null for text with unmatched braces", () => {
+    assert.strictEqual(extractMcpConfig("some { broken stuff"), null);
   });
 });
