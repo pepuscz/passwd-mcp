@@ -108,6 +108,8 @@ Store your API keys as secrets in passwd.team, then use their IDs in the `id` fi
 
 Let the agent browse your vault, check TOTP codes, and inject credentials into commands — without ever seeing raw credential values.
 
+> passwd stores tokens encrypted via the platform keychain (macOS Keychain / Linux libsecret). OpenClaw must run as a LaunchAgent (macOS) or systemd user unit (Linux) so the keychain is available.
+
 **1. Authenticate** with the agent-safe CLI:
 
 ```bash
@@ -119,7 +121,7 @@ PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-agent-cl
 ````markdown
 ---
 name: passwd
-description: "Browse team credentials and generate TOTP codes."
+description: "Authenticate, browse credentials, generate TOTP codes, and inject secrets into commands."
 metadata:
   {
     "openclaw":
@@ -132,9 +134,17 @@ metadata:
 
 # passwd
 
-Browse credentials and generate TOTP codes from your team's passwd.team vault. Always use `--json` for structured output.
+Browse credentials, generate TOTP codes, and inject secrets into commands — from your team's passwd.team vault. Always use `--json` for structured output.
 
 CMD: `npx -y @passwd/passwd-agent-cli@1.5.4`
+
+## Login
+
+Login is interactive — use the process tool to keep the session alive:
+1. Start CMD login (exec/process mode, not run-and-wait)
+2. Poll output to get the OAuth URL
+3. Send the URL to the user
+4. When the user provides the redirect URL, write it to the process stdin
 
 ## Commands
 
