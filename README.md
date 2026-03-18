@@ -2,6 +2,8 @@
 
 [passwd.team](https://passwd.team) for AI agents — your agent uses credentials without ever seeing the raw values.
 
+> **Disclaimer:** This is not officially part of the passwd.team project. It will be merged once it undergoes a security audit. Until then, use at your own risk.
+
 ## What it can do
 
 Four tools for different scopes — pick what fits your setup.
