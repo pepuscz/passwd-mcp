@@ -142,10 +142,14 @@ Browse credentials, generate TOTP codes, and inject secrets into commands — fr
 
 CMD: `npx -y @passwd/passwd-agent-cli@1.5.7`
 
+## Setup
+
+Before first use, ask the user for their passwd.team deployment URL (e.g. https://company.passwd.team). Do not assume a default — wait for their answer. Then set PASSWD_ORIGIN to that URL for all commands.
+
 ## Login
 
-Login is interactive — use the process tool to keep the session alive:
-1. Start CMD login (exec/process mode, not run-and-wait)
+Login is interactive — use the exec tool in process mode to keep the session alive:
+1. Start CMD login with exec (process mode, not run-and-wait)
 2. Poll output to get the OAuth URL
 3. Send the URL to the user
 4. When the user provides the redirect URL, write it to the process stdin
