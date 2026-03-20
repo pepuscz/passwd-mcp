@@ -185,6 +185,29 @@ CMD envs --json
 
 For multiple deployments, log in to each origin separately (`PASSWD_ORIGIN=... npx @passwd/passwd-agent-cli@1.5.6 login`). The agent can then switch with `--env` — see the Multi-environment section in the skill above.
 
+#### MCP servers with credentials
+
+MCP servers that need auth headers (e.g. private APIs) can use `mcp-wrap` to resolve credentials from the vault at startup. No raw values in config files — they're fetched at runtime from the keychain-backed vault.
+
+```json
+{
+  "name": "my-service",
+  "transport": "stdio",
+  "command": "npx",
+  "args": [
+    "-y", "@passwd/passwd-agent-cli@1.5.6", "mcp-wrap",
+    "https://mcp.example.com/mcp",
+    "x-api-email=SECRET_ID:username",
+    "x-api-key=SECRET_ID:password"
+  ],
+  "env": {
+    "PASSWD_ORIGIN": "https://your-deployment.passwd.team"
+  }
+}
+```
+
+Each `header=SECRET_ID:field` mapping resolves the secret field from the vault and passes it as an HTTP header to `mcp-remote`. Stdout is masked.
+
 ### MCP server
 
 If you just want read-only access to your vault from any MCP-compatible client — browse secrets, view details (credentials redacted), pull TOTP codes — install the MCP server standalone:
@@ -217,53 +240,6 @@ npx @passwd/passwd-agent-cli@1.5.6 exec --inject DB_PASS=SECRET_ID:password -- p
 ```
 
 Credentials are injected as environment variables into the child process. Stdout is always masked — if the subprocess prints a secret value, it's replaced with `<concealed by passwd>`. The raw values never enter the AI context.
-
-#### Launching MCP servers with credentials
-
-Use `exec --inject` to start an MCP server with credentials from the vault. No raw values in config files or on disk — they're resolved at runtime from the keychain-backed vault.
-
-Example wrapper script for a remote MCP server that needs auth headers (via `mcp-remote`):
-
-```bash
-#!/bin/bash
-# passwd-mcp-wrap.sh <url> <header=SECRET_ID:field> ...
-set -euo pipefail
-URL="$1"; shift
-INJECT=(); HEADERS=()
-for m in "$@"; do
-  H="${m%%=*}"; R="${m#*=}"; V="PASSWD_$(echo "$H" | tr '[:lower:]-' '[:upper:]_')"
-  INJECT+=("${V}=${R}"); HEADERS+=(--header "${H}: \$${V}")
-done
-exec npx -y @passwd/passwd-agent-cli@1.5.6 exec \
-  --inject "${INJECT[@]}" \
-  -- bash -c "exec npx -y mcp-remote \"$URL\" ${HEADERS[*]}"
-```
-
-The `bash -c` wrapper is needed so that `$PASSWD_...` env vars (injected by `exec --inject`) get expanded into the `--header` arguments.
-
-MCP client config pointing to the wrapper:
-
-```json
-{
-  "mcpServers": {
-    "my-service": {
-      "command": "bash",
-      "args": [
-        "/path/to/passwd-mcp-wrap.sh",
-        "https://mcp.example.com/mcp",
-        "x-api-email=SECRET_ID:username",
-        "x-api-key=SECRET_ID:password"
-      ],
-      "env": {
-        "PASSWD_ORIGIN": "https://your-deployment.passwd.team",
-        "HOME": "/Users/you"
-      }
-    }
-  }
-}
-```
-
-Credentials are resolved at runtime from the keychain-backed vault. Raw values exist only in the child process environment and are masked in stdout/stderr.
 
 ### Full CLI
 
@@ -346,6 +322,7 @@ The agent CLI (`@passwd/passwd-agent-cli`, binary `passwd-agent`) is a hardened 
 | `passwd-agent get <id>` | Get a secret (always redacted, no `--field`) |
 | `passwd-agent totp <id>` | Get current TOTP code |
 | `passwd-agent exec` | Run command with secrets as env vars (`--inject VAR=ID:FIELD`, stdout always masked) |
+| `passwd-agent mcp-wrap` | Launch `mcp-remote` with credentials as HTTP headers (`header=ID:FIELD`) |
 | `passwd-agent envs` | List known environments (`--json`) |
 | `passwd-agent --env <name>` | Global flag: target a specific environment by name substring |
 

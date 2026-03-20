@@ -7,6 +7,7 @@ import { listCommand } from "./commands/list.js";
 import { getCommand } from "./commands/get.js";
 import { totpCommand } from "./commands/totp.js";
 import { execCommand } from "./commands/exec.js";
+import { mcpWrapCommand } from "./commands/mcp-wrap.js";
 import { envsCommand } from "./commands/envs.js";
 import { formatError } from "./util/format.js";
 import { resetDiscoveryCache, getTokenDir, resolveEnv } from "@passwd/passwd-lib";
@@ -70,6 +71,14 @@ program
   .passThroughOptions()
   .action((args, opts) => {
     execCommand(args, opts).catch(die);
+  });
+
+program
+  .command("mcp-wrap <url>")
+  .description("Launch mcp-remote with credentials from the vault as HTTP headers")
+  .argument("<mappings...>", "header=SECRET_ID:field (one per header)")
+  .action((url, mappings) => {
+    mcpWrapCommand(url, mappings).catch(die);
   });
 
 program

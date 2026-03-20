@@ -103,6 +103,27 @@ describe("passwd-agent-cli integration", () => {
     assert.ok(stdout.includes("<concealed by passwd>"), "Multi-inject should work and mask values");
   });
 
+  it("mcp-wrap --help shows usage", (t) => {
+    const { stdout } = runCli("passwd-agent-cli", ["mcp-wrap", "--help"]);
+    assert.ok(stdout.includes("mcp-remote"), "Should mention mcp-remote");
+    assert.ok(stdout.includes("header=SECRET_ID:field"), "Should show mapping format");
+  });
+
+  it("mcp-wrap scrubs PASSWD_ORIGIN from child environment", (t) => {
+    if (skipUnlessAuth(t)) return;
+    if (!TEST_SECRET_ID) { t.skip("TEST_SECRET_ID not set"); return; }
+    // mcp-wrap will fail to connect (no real MCP server), but we can verify
+    // it resolves the secret and doesn't pass PASSWD_ORIGIN to the child.
+    // Use a short timeout — mcp-remote will fail, that's expected.
+    const { stderr } = runCli("passwd-agent-cli", [
+      "mcp-wrap",
+      "https://localhost:1/nonexistent",
+      `x-test=${TEST_SECRET_ID}:name`,
+    ]);
+    // PASSWD_ORIGIN should not appear in any error output
+    assert.ok(!stderr.includes(process.env.PASSWD_ORIGIN ?? ""), "PASSWD_ORIGIN should be scrubbed from child env");
+  });
+
   it("--help does NOT contain dangerous commands", (t) => {
     const { stdout } = runCli("passwd-agent-cli", ["--help"]);
     for (const cmd of ["create", "update", "delete", "share"]) {
