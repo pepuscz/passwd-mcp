@@ -222,7 +222,7 @@ Credentials are injected as environment variables into the child process. Stdout
 
 Use `exec --inject` to start an MCP server with credentials from the vault. No raw values in config files or on disk — they're resolved at runtime from the keychain-backed vault.
 
-Example wrapper script for a remote MCP server that needs auth headers:
+Example wrapper script for a remote MCP server that needs auth headers (via `mcp-remote`):
 
 ```bash
 #!/bin/bash
@@ -232,12 +232,14 @@ URL="$1"; shift
 INJECT=(); HEADERS=()
 for m in "$@"; do
   H="${m%%=*}"; R="${m#*=}"; V="PASSWD_$(echo "$H" | tr '[:lower:]-' '[:upper:]_')"
-  INJECT+=("${V}=${R}"); HEADERS+=(--header "${H}: \${${V}}")
+  INJECT+=("${V}=${R}"); HEADERS+=(--header "${H}: \$${V}")
 done
 exec npx -y @passwd/passwd-agent-cli@1.5.6 exec \
   --inject "${INJECT[@]}" \
-  -- npx -y mcp-remote "$URL" ${HEADERS[*]}
+  -- bash -c "exec npx -y mcp-remote \"$URL\" ${HEADERS[*]}"
 ```
+
+The `bash -c` wrapper is needed so that `$PASSWD_...` env vars (injected by `exec --inject`) get expanded into the `--header` arguments.
 
 MCP client config pointing to the wrapper:
 
