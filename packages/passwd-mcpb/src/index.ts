@@ -68,7 +68,7 @@ function parseInjection(spec: string): InjectionSpec {
 
 const server = new McpServer({
   name: "passwd-mcpb",
-  version: "1.5.4",
+  version: "1.5.5",
 });
 
 // --- Tool 1: passwd_login ---
@@ -485,7 +485,7 @@ async function mcpInitialize(
     {
       protocolVersion: "2025-03-26",
       capabilities: {},
-      clientInfo: { name: "passwd-mcpb", version: "1.5.4" },
+      clientInfo: { name: "passwd-mcpb", version: "1.5.5" },
     },
     headers,
   );
