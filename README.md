@@ -71,7 +71,7 @@ Resolve [SecretRefs](https://docs.openclaw.ai/gateway/secrets#secretref-contract
 PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-cli@1.5.7 login
 ```
 
-**2. Add the secrets provider** to `gateway.config.json5`:
+**2. Add the secrets provider** to `~/.openclaw/openclaw.json`:
 
 ```json5
 {
