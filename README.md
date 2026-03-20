@@ -218,34 +218,50 @@ npx @passwd/passwd-agent-cli@1.5.6 exec --inject DB_PASS=SECRET_ID:password -- p
 
 Credentials are injected as environment variables into the child process. Stdout is always masked — if the subprocess prints a secret value, it's replaced with `<concealed by passwd>`. The raw values never enter the AI context.
 
-#### Wrapping MCP servers with credentials
+#### Launching MCP servers with credentials
 
-If an MCP server needs an API key or other secret at startup, use `exec --inject` to launch it with credentials injected — without exposing them to the agent or the process list.
+Use `exec --inject` to start an MCP server with credentials from the vault. No raw values in config files or on disk — they're resolved at runtime from the keychain-backed vault.
 
-**Wrapper script** (`~/.local/bin/my-mcp-with-creds.sh`):
+Example wrapper script for a remote MCP server that needs auth headers:
 
 ```bash
 #!/bin/bash
-npx @passwd/passwd-agent-cli@1.5.6 exec \
-  --inject API_KEY=SECRET_ID:password \
-  -- npx @some/mcp-server
+# passwd-mcp-wrap.sh <url> <header=SECRET_ID:field> ...
+set -euo pipefail
+URL="$1"; shift
+INJECT=(); HEADERS=()
+for m in "$@"; do
+  H="${m%%=*}"; R="${m#*=}"; V="PASSWD_$(echo "$H" | tr '[:lower:]-' '[:upper:]_')"
+  INJECT+=("${V}=${R}"); HEADERS+=(--header "${H}: \${${V}}")
+done
+exec npx -y @passwd/passwd-agent-cli@1.5.6 exec \
+  --inject "${INJECT[@]}" \
+  -- npx -y mcp-remote "$URL" ${HEADERS[*]}
 ```
 
-**MCP client config** (point to the wrapper):
+MCP client config pointing to the wrapper:
 
 ```json
 {
   "mcpServers": {
     "my-service": {
       "command": "bash",
-      "args": ["/Users/you/.local/bin/my-mcp-with-creds.sh"],
-      "env": { "PASSWD_ORIGIN": "https://your-deployment.passwd.team" }
+      "args": [
+        "/path/to/passwd-mcp-wrap.sh",
+        "https://mcp.example.com/mcp",
+        "x-api-email=SECRET_ID:username",
+        "x-api-key=SECRET_ID:password"
+      ],
+      "env": {
+        "PASSWD_ORIGIN": "https://your-deployment.passwd.team",
+        "HOME": "/Users/you"
+      }
     }
   }
 }
 ```
 
-The MCP server receives the credential as an environment variable. Stdout is masked, so even if the server prints the secret, it won't leak into the agent context.
+Credentials are resolved at runtime from the keychain-backed vault. Raw values exist only in the child process environment and are masked in stdout/stderr.
 
 ### Full CLI
 
