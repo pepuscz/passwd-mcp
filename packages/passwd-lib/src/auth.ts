@@ -262,7 +262,20 @@ export async function exchangeCode(code: string): Promise<AuthTokens> {
   return data;
 }
 
+// Deduplicates concurrent refresh calls — only one in-flight request at a time.
+// Without this, parallel getSecret() calls can race: the first refresh invalidates
+// the old refresh token, and the second gets an HTML error page instead of JSON.
+let _refreshPromise: Promise<AuthTokens> | null = null;
+
 export async function refreshToken(tokens: AuthTokens): Promise<AuthTokens> {
+  if (_refreshPromise) return _refreshPromise;
+  _refreshPromise = doRefreshToken(tokens).finally(() => {
+    _refreshPromise = null;
+  });
+  return _refreshPromise;
+}
+
+async function doRefreshToken(tokens: AuthTokens): Promise<AuthTokens> {
   if (!tokens.refresh_token) {
     throw new Error("No refresh token available. Please re-authenticate.");
   }
