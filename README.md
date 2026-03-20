@@ -68,7 +68,7 @@ Resolve [SecretRefs](https://docs.openclaw.ai/gateway/secrets#secretref-contract
 **1. Authenticate** (the gateway runs `passwd-cli`, not the agent):
 
 ```bash
-PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-cli@1.5.5 login
+PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-cli@1.5.6 login
 ```
 
 **2. Add the secrets provider** to `gateway.config.json5`:
@@ -80,7 +80,7 @@ PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-cli@1.5.
       passwd: {
         source: "exec",
         command: "/usr/local/bin/npx",          // absolute path to npx
-        args: ["-y", "@passwd/passwd-cli@1.5.5", "resolve"],
+        args: ["-y", "@passwd/passwd-cli@1.5.6", "resolve"],
         passEnv: ["PASSWD_ORIGIN", "HOME"],
         allowSymlinkCommand: true,              // needed if npx is a symlink (Homebrew)
         trustedDirs: ["/usr/local", "/opt/homebrew"],
@@ -106,7 +106,7 @@ PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-cli@1.5.
 }
 ```
 
-Store your API keys as secrets in passwd.team, then use their IDs in the `id` field. Run `npx @passwd/passwd-cli@1.5.5 list` to find them.
+Store your API keys as secrets in passwd.team, then use their IDs in the `id` field. Run `npx @passwd/passwd-cli@1.5.6 list` to find them.
 
 #### Agent skill
 
@@ -117,7 +117,7 @@ Let the agent browse your vault, check TOTP codes, and inject credentials into c
 **1. Authenticate** with the agent-safe CLI:
 
 ```bash
-PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-agent-cli@1.5.5 login
+PASSWD_ORIGIN=https://your-deployment.passwd.team npx -y @passwd/passwd-agent-cli@1.5.6 login
 ```
 
 **2. Add the skill** at `~/.openclaw/workspace/skills/passwd/SKILL.md`:
@@ -140,7 +140,7 @@ metadata:
 
 Browse credentials, generate TOTP codes, and inject secrets into commands — from your team's passwd.team vault. Always use `--json` for structured output.
 
-CMD: `npx -y @passwd/passwd-agent-cli@1.5.5`
+CMD: `npx -y @passwd/passwd-agent-cli@1.5.6`
 
 ## Login
 
@@ -183,7 +183,7 @@ CMD envs --json
 
 **3. Restart the gateway** so the skill and provider are discovered.
 
-For multiple deployments, log in to each origin separately (`PASSWD_ORIGIN=... npx @passwd/passwd-agent-cli@1.5.5 login`). The agent can then switch with `--env` — see the Multi-environment section in the skill above.
+For multiple deployments, log in to each origin separately (`PASSWD_ORIGIN=... npx @passwd/passwd-agent-cli@1.5.6 login`). The agent can then switch with `--env` — see the Multi-environment section in the skill above.
 
 ### MCP server
 
@@ -194,7 +194,7 @@ If you just want read-only access to your vault from any MCP-compatible client �
   "mcpServers": {
     "passwd": {
       "command": "npx",
-      "args": ["-y", "@passwd/passwd-mcp@1.5.5"],
+      "args": ["-y", "@passwd/passwd-mcp@1.5.6"],
       "env": {
         "PASSWD_ORIGIN": "https://your-deployment.passwd.team"
       }
@@ -211,9 +211,9 @@ The agent CLI (`@passwd/passwd-agent-cli`) is a hardened subset of the full CLI 
 
 ```bash
 export PASSWD_ORIGIN=https://your-deployment.passwd.team
-npx @passwd/passwd-agent-cli@1.5.5 login
-npx @passwd/passwd-agent-cli@1.5.5 list
-npx @passwd/passwd-agent-cli@1.5.5 exec --inject DB_PASS=SECRET_ID:password -- psql -h host -U app
+npx @passwd/passwd-agent-cli@1.5.6 login
+npx @passwd/passwd-agent-cli@1.5.6 list
+npx @passwd/passwd-agent-cli@1.5.6 exec --inject DB_PASS=SECRET_ID:password -- psql -h host -U app
 ```
 
 Credentials are injected as environment variables into the child process. Stdout is always masked — if the subprocess prints a secret value, it's replaced with `<concealed by passwd>`. The raw values never enter the AI context.
@@ -226,7 +226,7 @@ If an MCP server needs an API key or other secret at startup, use `exec --inject
 
 ```bash
 #!/bin/bash
-npx @passwd/passwd-agent-cli@1.5.5 exec \
+npx @passwd/passwd-agent-cli@1.5.6 exec \
   --inject API_KEY=SECRET_ID:password \
   -- npx @some/mcp-server
 ```
@@ -255,17 +255,17 @@ The full CLI (`@passwd/passwd-cli`) has complete access to your vault — includ
 
 ```bash
 export PASSWD_ORIGIN=https://your-deployment.passwd.team
-npx @passwd/passwd-cli@1.5.5 login
-npx @passwd/passwd-cli@1.5.5 list
-npx @passwd/passwd-cli@1.5.5 --help
+npx @passwd/passwd-cli@1.5.6 login
+npx @passwd/passwd-cli@1.5.6 list
+npx @passwd/passwd-cli@1.5.6 --help
 ```
 
 For multiple deployments, log in to each origin separately, then use `--env` to switch:
 
 ```bash
-PASSWD_ORIGIN=https://acme.passwd.team npx @passwd/passwd-cli@1.5.5 login
-PASSWD_ORIGIN=https://initech.passwd.team npx @passwd/passwd-cli@1.5.5 login
-npx @passwd/passwd-cli@1.5.5 list --env acme
+PASSWD_ORIGIN=https://acme.passwd.team npx @passwd/passwd-cli@1.5.6 login
+PASSWD_ORIGIN=https://initech.passwd.team npx @passwd/passwd-cli@1.5.6 login
+npx @passwd/passwd-cli@1.5.6 list --env acme
 ```
 
 ### Passing sensitive values via stdin

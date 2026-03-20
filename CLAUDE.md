@@ -71,8 +71,8 @@ Run `npm test` before every commit. Integration tests before release.
 1. `bash scripts/bump-version.sh OLD_VERSION NEW_VERSION` — updates all 11 files and verifies no old version remains
 2. `npm install` — regenerate lockfile
 3. `npm run build` — verify it compiles
-4. `npm test` — run unit tests
-5. `npm run test:integration` — run integration tests locally (requires `~/.passwd/` tokens)
+4. `npm test` — run unit tests. **All must pass.**
+5. `PASSWD_ORIGIN=https://ackee-be-dev.passwd.team npm run test:integration` — run integration tests against the dev deployment. **All must pass** (skips are OK). Do not release if any test fails.
 7. Commit, push — GitHub Action auto-publishes all four npm packages on push to main
 8. `gh release create vX.Y.Z --title "vX.Y.Z — Short label"` — this creates a tag, which triggers a second CI run that builds `.mcpb` on macOS and attaches it to the release. Title must be ≤25 chars. Format: `vX.Y.Z — Two-three words`.
 9. Wait for CI — check `gh run list` to confirm all three jobs pass: `publish` (npm), `build-mcpb` (macOS build), `release-mcpb` (attaches `.mcpb` to release)
