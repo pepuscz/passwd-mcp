@@ -25,12 +25,37 @@ export function parseMapping(spec: string): HeaderMapping {
   };
 }
 
+/** Escape a string for safe inclusion in a single-quoted shell argument. */
+export function shellQuote(s: string): string {
+  return "'" + s.replaceAll("'", "'\\''") + "'";
+}
+
+/**
+ * Build the bash command and env vars for mcp-wrap.
+ * Credentials go into env vars (_PASSWD_HDR_N), not into the command string.
+ */
+export function buildMcpCommand(
+  url: string,
+  headerNames: string[],
+  secretValues: string[],
+): { cmd: string; envVars: Record<string, string> } {
+  const envVars: Record<string, string> = {};
+  const headerParts: string[] = [];
+  for (let i = 0; i < headerNames.length; i++) {
+    const envVar = `_PASSWD_HDR_${i}`;
+    envVars[envVar] = secretValues[i];
+    headerParts.push(`--header ${shellQuote(headerNames[i] + ": ")}"\$${envVar}"`);
+  }
+  const cmd = `npx -y mcp-remote ${shellQuote(url)} ${headerParts.join(" ")}`;
+  return { cmd, envVars };
+}
+
 export async function mcpWrapCommand(
   url: string,
   mappings: string[],
 ): Promise<void> {
-  // Parse and resolve all header mappings sequentially
-  const headers: string[] = [];
+  // Resolve all header mappings sequentially.
+  const headerNames: string[] = [];
   const secretValues: string[] = [];
 
   for (const spec of mappings) {
@@ -40,18 +65,18 @@ export async function mcpWrapCommand(
     if (value === undefined) {
       throw new Error(`Field '${field}' not found in secret '${secretId}'`);
     }
-    const val = String(value);
-    secretValues.push(val);
-    headers.push("--header", `${headerName}: ${val}`);
+    headerNames.push(headerName);
+    secretValues.push(String(value));
   }
 
-  const env: Record<string, string> = { ...process.env } as Record<string, string>;
+  const { cmd, envVars } = buildMcpCommand(url, headerNames, secretValues);
+
+  const env: Record<string, string> = { ...process.env, ...envVars } as Record<string, string>;
   delete env.PASSWD_ORIGIN;
   delete env.PASSWD_API_URL;
   delete env.PASSWD_CLIENT_ID;
 
-  const args = ["-y", "mcp-remote", url, ...headers];
-  const child = spawn("npx", args, {
+  const child = spawn("bash", ["-c", cmd], {
     env,
     stdio: ["inherit", "pipe", "pipe"],
   });
