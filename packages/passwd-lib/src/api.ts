@@ -141,10 +141,17 @@ export async function createSecret(secret: Partial<Secret>): Promise<Secret> {
 }
 
 export async function updateSecret(id: string, updates: Partial<Secret>): Promise<Secret> {
+  // The API resets the secret type to "password" if type is omitted from the
+  // update payload. Fetch the current type and include it to preserve it.
+  let payload = updates;
+  if (!updates.type) {
+    const current = await getSecret(id);
+    payload = { type: current.type, ...updates };
+  }
   const response = await authFetch(`/secrets/${encodeURIComponent(id)}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updates),
+    body: JSON.stringify(payload),
   });
   return handleResponse<Secret>(response);
 }

@@ -289,7 +289,7 @@ describe("lifecycle: CRUD + TOTP", () => {
 
   verifyGet(
     () => dbCredId,
-    { name: "Test DB Lifecycle", username: "dbadmin", note: "db note", databaseName: "testdb", databaseType: "postgresql", server: "db.example.com", port: "5432" },
+    { name: "Test DB Lifecycle", username: "dbadmin", note: "db note", databaseName: "testdb", databaseType: "postgresql", server: "db.example.com", port: 5432 },
     ["password"],
     "databaseCredentials secret",
   );

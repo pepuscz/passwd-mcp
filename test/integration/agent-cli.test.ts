@@ -90,6 +90,19 @@ describe("passwd-agent-cli integration", () => {
     assert.ok(stdout.includes("<concealed by passwd>"), "Agent CLI should mask all injected values");
   });
 
+  it("exec --inject works with multiple mappings from the same secret", (t) => {
+    if (skipUnlessAuth(t)) return;
+    if (!TEST_SECRET_ID) { t.skip("TEST_SECRET_ID not set"); return; }
+    const { stdout, code } = runCli("passwd-agent-cli", [
+      "exec",
+      "--inject", `VAR_A=${TEST_SECRET_ID}:name`,
+      "--inject", `VAR_B=${TEST_SECRET_ID}:password`,
+      "--", "sh", "-c", "echo $VAR_A $VAR_B",
+    ]);
+    assert.equal(code, 0);
+    assert.ok(stdout.includes("<concealed by passwd>"), "Multi-inject should work and mask values");
+  });
+
   it("--help does NOT contain dangerous commands", (t) => {
     const { stdout } = runCli("passwd-agent-cli", ["--help"]);
     for (const cmd of ["create", "update", "delete", "share"]) {

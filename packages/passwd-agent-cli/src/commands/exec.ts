@@ -20,19 +20,18 @@ export async function execCommand(
   delete env.PASSWD_API_URL;
   delete env.PASSWD_CLIENT_ID;
 
-  // Parse and fetch all injections in parallel
-  const tasks = injections.map(async (spec) => {
+  // Fetch secrets sequentially — the passwd API doesn't handle concurrent
+  // requests reliably (second request may get HTML instead of JSON).
+  const resolved: { varName: string; value: string }[] = [];
+  for (const spec of injections) {
     const { varName, secretId, field } = parseInjection(spec);
-
     const secret = await getSecret(secretId);
     const value = (secret as unknown as Record<string, unknown>)[field];
     if (value === undefined) {
       throw new Error(`Field '${field}' not found in secret '${secretId}'`);
     }
-    return { varName, value: String(value) };
-  });
-
-  const resolved = await Promise.all(tasks);
+    resolved.push({ varName, value: String(value) });
+  }
   for (const { varName, value } of resolved) {
     env[varName] = value;
   }
