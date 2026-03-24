@@ -258,12 +258,15 @@ npx @passwd/passwd-cli@1.6.0 list
 npx @passwd/passwd-cli@1.6.0 --help
 ```
 
-For multiple deployments, log in to each origin separately, then use `--env` to switch:
+For multiple deployments, log in to each origin separately, then use `--env` to switch. Or use per-project tokens — `passwd login .` in each project directory:
 
 ```bash
+# Global multi-env (tokens in ~/.passwd)
 PASSWD_ORIGIN=https://acme.passwd.team npx @passwd/passwd-cli@1.6.0 login
-PASSWD_ORIGIN=https://initech.passwd.team npx @passwd/passwd-cli@1.6.0 login
 npx @passwd/passwd-cli@1.6.0 list --env acme
+
+# Per-project (tokens in ./project/.passwd, auto-discovered)
+cd ~/project && PASSWD_ORIGIN=https://acme.passwd.team npx @passwd/passwd-cli@1.6.0 login .
 ```
 
 ### Passing sensitive values via stdin
@@ -292,7 +295,9 @@ Check [releases](https://github.com/pepuscz/passwd/releases) for new versions, t
 
 ## Authentication
 
-Google OAuth2. On first use, the `passwd_login` tool (MCP) or `passwd login` (CLI) will guide you through authentication. Tokens are encrypted at rest on your machine and auto-refresh. Requires macOS Keychain or Linux `secret-tool` (libsecret).
+Google OAuth2. On first use, the `passwd_login` tool (MCP) or `passwd login` (CLI) will guide you through authentication. Tokens are encrypted at rest (AES-256-GCM, key in platform keychain) and auto-refresh. Requires macOS Keychain or Linux `secret-tool` (libsecret).
+
+**Per-project tokens** — `passwd login <dir>` saves tokens to `<dir>/.passwd/` instead of `~/.passwd`. All commands auto-discover `.passwd/` by walking up from the working directory (like `.git`), so no extra config is needed after login. Useful for Cowork projects where each shared folder can have its own passwd identity.
 
 ## MCP tools reference
 
@@ -320,7 +325,7 @@ The agent CLI (`@passwd/passwd-agent-cli`, binary `passwd-agent`) is a hardened 
 
 | Command | Description |
 |---|---|
-| `passwd-agent login` | Authenticate with Google OAuth |
+| `passwd-agent login [dir]` | Authenticate with Google OAuth (with `dir`: save tokens to `<dir>/.passwd/`) |
 | `passwd-agent whoami` | Show current user |
 | `passwd-agent list` | List/search secrets (`-q`, `-t`, `--json`) |
 | `passwd-agent get <id>` | Get a secret (always redacted, no `--field`) |
@@ -336,7 +341,7 @@ The full CLI (`@passwd/passwd-cli`, binary `passwd`) has complete vault access i
 
 | Command | Description |
 |---|---|
-| `passwd login` | Authenticate with Google OAuth |
+| `passwd login [dir]` | Authenticate with Google OAuth (with `dir`: save tokens to `<dir>/.passwd/`) |
 | `passwd whoami` | Show current user |
 | `passwd list` | List/search secrets (`-q`, `-t`, `--json`) |
 | `passwd get <id>` | Get a secret (redacted by default; `--field` for raw value) |
