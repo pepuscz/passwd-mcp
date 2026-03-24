@@ -28,7 +28,9 @@ let _resolvedTokenDir: string | null = null;
 
 /**
  * Walk up from cwd looking for a .passwd/ directory that contains a token file
- * for the current PASSWD_ORIGIN. Falls back to ~/.passwd.
+ * for the current PASSWD_ORIGIN. Stops at the nearest git root (or cwd if no
+ * git repo found) to avoid matching .passwd/ in shared ancestor paths like /tmp.
+ * Falls back to ~/.passwd.
  */
 function resolveTokenDir(): string {
   if (_tokenDirOverride) return _tokenDirOverride;
@@ -46,6 +48,8 @@ function resolveTokenDir(): string {
         _resolvedTokenDir = candidate;
         return candidate;
       }
+      // Stop at git root — don't walk past the repo boundary
+      if (existsSync(join(dir, ".git"))) break;
       const parent = dirname(dir);
       if (parent === dir) break;
       dir = parent;

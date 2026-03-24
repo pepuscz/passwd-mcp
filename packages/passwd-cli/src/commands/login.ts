@@ -1,6 +1,6 @@
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, appendFileSync, writeFileSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { buildOAuthUrl, extractCodeFromRedirectUrl, exchangeCode, setTokenDirOverride } from "@passwd/passwd-lib";
 
@@ -26,22 +26,25 @@ export async function loginCommand(dir?: string): Promise<void> {
     if (dir) {
       const tokenDir = join(resolve(dir), ".passwd");
       console.log(`Tokens saved to ${tokenDir}`);
-      warnGitignore(resolve(dir));
+      ensureGitignore(resolve(dir));
     }
   } finally {
     rl.close();
   }
 }
 
-function warnGitignore(dir: string): void {
+function ensureGitignore(dir: string): void {
   const gitignorePath = join(dir, ".gitignore");
   try {
     if (existsSync(gitignorePath)) {
       const content = readFileSync(gitignorePath, "utf-8");
       if (content.includes(".passwd")) return;
+      appendFileSync(gitignorePath, `${content.endsWith("\n") ? "" : "\n"}.passwd\n`);
+    } else {
+      writeFileSync(gitignorePath, ".passwd\n");
     }
-    console.log("\n⚠  Add .passwd/ to .gitignore — tokens contain encrypted credentials.");
+    console.log("Added .passwd to .gitignore");
   } catch {
-    // ignore read errors
+    console.log("⚠  Could not update .gitignore — add .passwd/ manually to avoid committing tokens.");
   }
 }
