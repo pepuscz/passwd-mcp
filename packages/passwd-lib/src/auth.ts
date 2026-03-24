@@ -1,4 +1,5 @@
 import { readFile, writeFile, mkdir, unlink } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import {
   randomUUID,
   randomBytes,
@@ -6,7 +7,7 @@ import {
   createDecipheriv,
   createHash,
 } from "node:crypto";
-import { join } from "node:path";
+import { join, resolve, dirname } from "node:path";
 import { homedir } from "node:os";
 import type { AuthTokens } from "./types.js";
 import { keychainSave, keychainLoad } from "./keychain.js";
@@ -15,8 +16,55 @@ import type { EnvInfo } from "./envs.js";
 const GOOGLE_AUTH_ORIGIN = "https://accounts.google.com/o/oauth2/v2/auth";
 const SCOPES = "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email";
 
-const TOKEN_DIR = join(homedir(), ".passwd");
+const DEFAULT_TOKEN_DIR = join(homedir(), ".passwd");
 const ENCRYPTION_KEY_ACCOUNT = "encryption-key";
+
+// ---------------------------------------------------------------------------
+// Token directory resolution (auto-discovery + override)
+// ---------------------------------------------------------------------------
+
+let _tokenDirOverride: string | null = null;
+let _resolvedTokenDir: string | null = null;
+
+/**
+ * Walk up from cwd looking for a .passwd/ directory that contains a token file
+ * for the current PASSWD_ORIGIN. Falls back to ~/.passwd.
+ */
+function resolveTokenDir(): string {
+  if (_tokenDirOverride) return _tokenDirOverride;
+  if (_resolvedTokenDir) return _resolvedTokenDir;
+
+  try {
+    const origin = getOrigin();
+    const hash = createHash("sha256").update(origin).digest("hex").slice(0, 16);
+    const tokenFileName = `tokens-${hash}.json`;
+
+    let dir = resolve(process.cwd());
+    while (true) {
+      const candidate = join(dir, ".passwd");
+      if (existsSync(join(candidate, tokenFileName))) {
+        _resolvedTokenDir = candidate;
+        return candidate;
+      }
+      const parent = dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+  } catch {
+    // getOrigin() throws if PASSWD_ORIGIN not set — fall through to default
+  }
+
+  _resolvedTokenDir = DEFAULT_TOKEN_DIR;
+  return DEFAULT_TOKEN_DIR;
+}
+
+/**
+ * Override the token directory for this process (used by `passwd login <dir>`).
+ */
+export function setTokenDirOverride(dir: string | null): void {
+  _tokenDirOverride = dir;
+  _resolvedTokenDir = null;
+}
 
 // ---------------------------------------------------------------------------
 // Token file path (hash-based)
@@ -24,7 +72,7 @@ const ENCRYPTION_KEY_ACCOUNT = "encryption-key";
 
 function getTokenFile(origin: string): string {
   const hash = createHash("sha256").update(origin).digest("hex").slice(0, 16);
-  return join(TOKEN_DIR, `tokens-${hash}.json`);
+  return join(resolveTokenDir(), `tokens-${hash}.json`);
 }
 
 // ---------------------------------------------------------------------------
@@ -317,7 +365,7 @@ async function saveTokens(tokens: AuthTokens): Promise<void> {
   const key = await getOrCreateEncryptionKey();
   const json = JSON.stringify({ ...tokens, origin });
   const encrypted = encrypt(json, key);
-  await mkdir(TOKEN_DIR, { recursive: true, mode: 0o700 });
+  await mkdir(resolveTokenDir(), { recursive: true, mode: 0o700 });
   await writeFile(getTokenFile(origin), encrypted, {
     encoding: "utf-8",
     mode: 0o600,
@@ -326,7 +374,7 @@ async function saveTokens(tokens: AuthTokens): Promise<void> {
 }
 
 async function updateEnvironmentIndex(origin: string): Promise<void> {
-  const envFile = join(TOKEN_DIR, "environments.json");
+  const envFile = join(resolveTokenDir(), "environments.json");
   let envs: EnvInfo[] = [];
   try {
     const content = await readFile(envFile, "utf-8");
@@ -343,12 +391,12 @@ async function updateEnvironmentIndex(origin: string): Promise<void> {
     envs.push({ origin, savedAt: Date.now() });
   }
 
-  // TOKEN_DIR already created by saveTokens caller
+  // resolveTokenDir() already created by saveTokens caller
   await writeFile(envFile, JSON.stringify(envs, null, 2), { encoding: "utf-8", mode: 0o600 });
 }
 
 async function removeFromEnvironmentIndex(origin: string): Promise<void> {
-  const envFile = join(TOKEN_DIR, "environments.json");
+  const envFile = join(resolveTokenDir(), "environments.json");
   try {
     const content = await readFile(envFile, "utf-8");
     let envs = JSON.parse(content) as EnvInfo[];
@@ -375,10 +423,11 @@ export function resetDiscoveryCache(): void {
   _discoveredClientId = null;
   _discoveryDone = false;
   _encryptionKey = undefined;
+  _resolvedTokenDir = null;
 }
 
 export function getTokenDir(): string {
-  return TOKEN_DIR;
+  return resolveTokenDir();
 }
 
 export async function loadTokens(): Promise<AuthTokens | null> {

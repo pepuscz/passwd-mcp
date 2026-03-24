@@ -35,6 +35,7 @@ export {
   getAccessToken,
   resetDiscoveryCache,
   getTokenDir,
+  setTokenDirOverride,
   deleteTokens,
 } from "./auth.js";
 

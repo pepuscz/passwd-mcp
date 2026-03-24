@@ -23,7 +23,7 @@ const program = new Command();
 program
   .name("passwd")
   .description("CLI for passwd.team password manager")
-  .version("1.5.7")
+  .version("1.6.0")
   .enablePositionalOptions()
   .option("--env <name>", "Target a specific environment (substring match against known origins)");
 
@@ -37,9 +37,9 @@ program.hook("preAction", async (thisCommand) => {
 });
 
 program
-  .command("login")
-  .description("Authenticate with Google OAuth")
-  .action(() => loginCommand().catch(die));
+  .command("login [dir]")
+  .description("Authenticate with Google OAuth (optional: save tokens to <dir>/.passwd/)")
+  .action((dir) => loginCommand(dir).catch(die));
 
 program
   .command("whoami")
